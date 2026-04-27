@@ -1,0 +1,709 @@
+// ── Load username from localStorage ──
+var storedName = localStorage.getItem('userName');
+if (storedName) {
+  document.getElementById('uname').textContent = storedName.split(' ')[0];
+}
+
+// ── State variables ──
+var allRecipes    = [];
+var fuseInstance  = null;
+var currentRecipe = null;
+var currentStep   = 0;
+var isPlaying     = false;
+var userSkill     = 'Beginner';
+var currentDish   = null;
+
+// ── Embedded recipe data ──
+var FALLBACK = [
+  {"id": 21, "dish": "Cabbage Sabji", "variant": "With Onion", "keywords": ["cabbage", "sabji", "patta gobhi", "with onion"], "time": "20 min", "difficulty": "Easy", "serves": "3", "ingredients": ["Cabbage - 2 cups finely shredded", "Onion - 1 large sliced", "Tomato - 1 chopped", "Green chilli - 1", "Cumin seeds - 1 tsp", "Turmeric -  half tsp", "Red chilli powder - 1 tsp", "Oil - 2 tbsp", "Salt - to taste", "Fresh coriander leaves"], "steps": ["First wash the cabbage thoroughly and finely shred it using a sharp knife. Keep it aside in a bowl so that it is ready for cooking.", "Take one large onion, peel and slice it thinly. Also chop one tomato and slit one green chilli for flavour.", "Heat 2 tablespoons of oil in a pan on medium flame. Once the oil becomes hot, add cumin seeds and allow them to crackle.", "Add sliced onions and sauté them patiently until they turn light golden brown and release a sweet aroma.", "Now add chopped tomatoes and cook until they become soft and form a thick masala base.", "Add turmeric powder, red chilli powder, and salt. Mix all spices well so that they coat evenly.", "Add the shredded cabbage and mix gently so that the masala spreads uniformly.", "Cover the pan with a lid and cook on low flame for about 8-10 minutes until cabbage becomes soft.", "Remove the lid and cook for 3-4 minutes more to remove extra moisture.", "Garnish with fresh coriander leaves and serve hot with roti or rice."], "tags": ["Easy"]},
+  {"id": 22, "dish": "Cabbage Sabji", "variant": "Without Onion", "keywords": ["cabbage", "sabji", "no onion"], "time": "15 min", "difficulty": "Easy", "serves": "2", "ingredients": ["Cabbage - 2 cups", "Mustard seeds -  half tsp", "Cumin seeds - 1 tsp", "Green chilli - 1", "Turmeric -  half tsp", "Oil - 2 tbsp", "Salt - to taste", "Lemon juice - 1 tsp"], "steps": ["First take a fresh cabbage and remove any damaged outer leaves. Wash it thoroughly under running water to remove dirt. Now finely shred the cabbage using a sharp knife and keep it aside in a large bowl so that it is ready for cooking.", "Take one green chilli, wash it properly and chop it into small pieces. This will add a mild spicy flavour to the sabji.", "Place a pan on medium flame and add 2 tablespoons of cooking oil. Allow the oil to heat properly before adding spices.", "Once the oil becomes hot, add mustard seeds and let them splutter completely. This releases a nutty aroma and enhances the taste of the dish.", "Now add cumin seeds and chopped green chilli into the pan. Sauté them for a few seconds until you get a pleasant fragrance.", "Slowly add the shredded cabbage into the pan and mix it gently so that the spices get distributed evenly.", "Sprinkle turmeric powder and salt over the cabbage. Stir well so that all the cabbage pieces are nicely coated with the seasoning.", "Cover the pan with a lid and cook the sabji on low flame for about 8-10 minutes. This helps the cabbage to soften and cook in its own moisture.", "After cooking, remove the lid and stir the sabji once again. Cook for 2-3 minutes on medium flame to remove any extra water and improve texture.", "Finally squeeze a little fresh lemon juice over the sabji for a refreshing taste. Mix gently and serve the hot cabbage sabji with roti or rice."], "tags": ["No Onion", "Easy"]},
+  {"id": 23, "dish": "Cabbage Sabji", "variant": "Jain Style", "keywords": ["cabbage", "jain", "no onion", "no garlic"], "time": "15 min", "difficulty": "Easy", "serves": "2", "ingredients": ["Cabbage - 2 cups", "Cumin seeds - 1 tsp", "Green chilli - 1", "Turmeric -  half tsp", "Oil - 2 tbsp", "Salt - to taste", "Garam masala - pinch", "Coriander leaves"], "steps": ["First take a fresh cabbage and remove the outer leaves if they look dry or damaged. Wash the cabbage thoroughly under clean running water. Now finely shred it using a sharp knife or grater and keep it ready in a bowl for cooking.", "Place a pan on medium flame and add around 2 tablespoons of cooking oil. Allow the oil to heat properly so that the spices release their full aroma.", "Once the oil becomes hot, add cumin seeds into the pan. Let them crackle for a few seconds until a pleasant aroma starts coming.", "Now add finely chopped green chilli and sauté it lightly for a few seconds. This will give a mild spicy flavour to the sabji.", "Slowly add the shredded cabbage into the pan. Mix it gently so that the cabbage gets coated evenly with the oil and spices.", "Add turmeric powder and salt according to taste. Stir well so that the seasoning spreads uniformly throughout the sabji.", "Cook the cabbage on medium flame for about 8-10 minutes. Stir occasionally so that the sabji cooks evenly and does not stick to the pan.", "When the cabbage becomes soft and well cooked, sprinkle a pinch of garam masala over it to enhance the flavour.", "Switch off the flame and garnish the sabji with freshly chopped coriander leaves for freshness and colour.", "Serve the hot Jain style cabbage sabji with soft chapati or phulka for a simple and healthy meal."], "tags": ["Jain", "No Onion", "No Garlic", "Easy"]},
+  {"id": 24, "dish": "Cabbage Sabji", "variant": "Dry Style", "keywords": ["cabbage", "dry", "roasted"], "time": "18 min", "difficulty": "Easy", "serves": "2", "ingredients": ["Cabbage - 2 cups chopped", "Cumin seeds - 1 tsp", "Turmeric -  half tsp", "Black pepper -  half tsp", "Oil - 2 tbsp", "Salt - to taste"], "steps": ["First take a fresh cabbage and remove any damaged outer leaves. Wash it properly under running water to remove dirt and impurities. Now finely chop or shred the cabbage using a sharp knife and keep it aside in a bowl.", "Place a wide pan or kadai on medium flame and add about 2 tablespoons of cooking oil. Allow the oil to heat well before adding the spices.", "Once the oil becomes hot, add cumin seeds into the pan and let them crackle for a few seconds. This step helps in releasing a pleasant aroma and enhances the overall flavour.", "Now add the chopped cabbage into the pan. Initially cook it on high flame for a few minutes while stirring gently. This helps in reducing the raw smell and begins the roasting process.", "Add salt according to taste and sprinkle turmeric powder evenly over the cabbage. Mix everything properly so that the seasoning coats all the pieces.", "Continue cooking the sabji uncovered on medium flame. Stir continuously so that the cabbage roasts evenly and does not stick or burn at the bottom of the pan.", "As the cooking continues, the cabbage will start becoming soft and slightly crisp. Allow it to roast a little more until you notice a light golden texture.", "Now reduce the flame to low and cook for another 2-3 minutes so that the sabji gets a perfect dry consistency.", "Finally sprinkle black pepper powder over the sabji for a mild spicy flavour. Mix gently once again.", "Switch off the flame and serve the dry cabbage sabji hot along with dal and steamed rice or chapati."], "tags": ["Easy"]},
+  {"id": 25, "dish": "Cabbage Sabji", "variant": "Gravy Style", "keywords": ["cabbage", "gravy"], "time": "25 min", "difficulty": "Medium", "serves": "3", "ingredients": ["Cabbage - 2 cups", "Onion - 1", "Tomato - 1", "Chilli powder - 1 tsp", "Turmeric -  half tsp", "Oil - 2 tbsp", "Water -  half cup", "Salt - to taste"], "steps": ["First take a fresh cabbage, remove the outer leaves if required and wash it thoroughly under clean running water. Finely shred the cabbage using a sharp knife. Also peel and chop one onion and one tomato into small pieces and keep all the ingredients ready.", "Place a pan or kadai on medium flame and add about 2 tablespoons of cooking oil. Allow the oil to heat properly before adding the chopped onions.", "Add the chopped onions into the hot oil and sauté them patiently. Cook until they turn light golden brown and release a pleasant aroma, which will form the base of the gravy.", "Now add the chopped tomatoes and cook them well until they become soft and mushy. Stir continuously so that they blend nicely with the onions and form a thick masala mixture.", "Add red chilli powder and turmeric powder into the pan. Mix the spices properly so that they cook slightly and release their flavour.", "Add the shredded cabbage into the masala and mix gently so that the cabbage gets evenly coated with the spices.", "Pour about half a cup of water into the pan to create a light gravy consistency. Stir once so that everything combines well.", "Cover the pan with a lid and cook the sabji on low to medium flame for around 10-12 minutes. This allows the cabbage to cook properly and absorb the flavours.", "Open the lid and stir the sabji occasionally to prevent it from sticking to the bottom. Adjust the salt according to taste and check the thickness of the gravy.", "Once the cabbage becomes soft and the gravy reaches the desired consistency, switch off the flame. Garnish with fresh coriander leaves and serve the hot cabbage gravy sabji with roti or rice."], "tags": ["Easy"]},
+  {"id": 26, "dish": "Cabbage Sabji", "variant": "Quick Style", "keywords": ["cabbage", "quick", "10 min"], "time": "10 min", "difficulty": "Easy", "serves": "2", "ingredients": ["Cabbage - 2 cups pre shredded", "Oil - 1 tbsp", "Salt - to taste", "Black pepper -  half tsp", "Lemon juice - 1 tsp"], "steps": ["First take pre-shredded cabbage to save preparation time. If using fresh cabbage, wash it thoroughly and shred it finely. Keep it ready in a bowl so that the cooking process becomes faster.", "Place a wide pan or kadai on the stove and switch on the flame to high. Add about 1 tablespoon of cooking oil and allow it to heat properly.", "Once the oil becomes hot, add the shredded cabbage directly into the pan. Begin stir frying immediately so that the cabbage cooks quickly without becoming soggy.", "Add salt according to taste and sprinkle a little black pepper powder over the cabbage. These simple seasonings enhance the natural flavour of the vegetable.", "Toss and stir the cabbage continuously using a spatula. This ensures even cooking and prevents the sabji from sticking or burning at the bottom.", "Cook the cabbage uncovered on high flame. This step helps in maintaining a slight crunchiness and fresh texture in the sabji.", "After a few minutes, squeeze a small amount of fresh lemon juice over the cabbage. Mix gently to give the dish a light tangy taste.", "When the cabbage becomes slightly soft but still retains a bit of crispness, switch off the flame to avoid overcooking.", "Carefully transfer the hot sabji into a clean serving bowl using a spoon or spatula.", "Serve the quick cabbage sabji immediately while it is hot and fresh. It can be enjoyed as a light side dish with roti or rice."], "tags": ["Quick", "Easy"]},
+  {"id": 27, "dish": "Cabbage Sabji", "variant": "Spicy Style", "keywords": ["cabbage", "spicy"], "time": "20 min", "difficulty": "Medium", "serves": "2", "ingredients": ["Cabbage - 2 cups", "Onion - 1", "Dry red chilli - 2", "Chilli powder - 2 tsp", "Garam masala - 1 tsp", "Oil - 3 tbsp", "Salt - to taste"], "steps": ["First take a fresh cabbage, remove the outer leaves if required and wash it thoroughly under running water. Finely shred the cabbage using a sharp knife and keep it ready in a bowl.", "Place a pan or kadai on medium flame and add about 2 to 3 tablespoons of cooking oil. Allow the oil to heat properly before adding the spices.", "Once the oil becomes hot, add dry red chillies into the pan. Let them fry for a few seconds so that they release a strong and smoky flavour.", "Now add finely chopped onions and sauté them patiently. Cook until the onions turn golden brown and develop a rich aroma.", "Add the shredded cabbage into the pan and mix it well with the onions so that the flavours combine properly.", "Sprinkle red chilli powder generously to give the sabji a spicy taste. Mix the spices evenly with the cabbage.", "Add garam masala and salt according to taste. Stir everything well so that the cabbage gets coated nicely with the seasoning.", "Cook the sabji uncovered on medium flame. Stir frequently to ensure even cooking and to prevent sticking.", "As the cabbage cooks, allow it to roast slightly so that it develops a mildly crispy texture and deeper flavour.", "Finally taste the sabji and adjust the spice level if needed. Once done, switch off the flame and serve the spicy cabbage sabji hot with paratha or roti."], "tags": ["Spicy", "Easy"]},
+  {"id": 28, "dish": "Cabbage Sabji", "variant": "South Indian Style", "keywords": ["cabbage", "south indian"], "time": "18 min", "difficulty": "Easy", "serves": "2", "ingredients": ["Cabbage - 2 cups", "Mustard seeds -  half tsp", "Curry leaves - few", "Green chilli - 1", "Turmeric -  half tsp", "Grated coconut - 3 tbsp", "Oil - 2 tbsp", "Salt - to taste"], "steps": ["First take a fresh cabbage and remove any dry outer leaves. Wash it thoroughly under running water and finely shred it using a sharp knife or grater. Keep the shredded cabbage ready in a bowl for cooking.", "Place a pan or kadai on medium flame and add about 2 tablespoons of cooking oil. Allow the oil to heat properly before adding the tempering ingredients.", "Once the oil becomes hot, add mustard seeds and let them splutter completely. This step enhances the traditional South Indian flavour of the dish.", "Now add fresh curry leaves and a slit green chilli into the pan. Sauté them for a few seconds until a pleasant aroma is released.", "Add the shredded cabbage into the pan and mix it gently so that it gets coated well with the tempered spices.", "Sprinkle turmeric powder and salt according to taste. Stir properly to distribute the seasoning evenly throughout the cabbage.", "Cover the pan with a lid and cook the sabji on medium flame for about 8-10 minutes so that the cabbage becomes soft and cooks in its own moisture.", "Open the lid and stir the sabji after every few minutes to ensure even cooking and to prevent sticking at the bottom.", "Once the cabbage is almost cooked, add freshly grated coconut into the sabji. Mix gently and cook for another 2 minutes to blend the flavours.", "Switch off the flame and transfer the sabji to a serving bowl. Serve the hot South Indian style cabbage sabji with sambar rice or chapati."], "tags": ["South Indian", "Easy"]},
+  {"id": 29, "dish": "Cabbage Sabji", "variant": "Punjabi Style", "keywords": ["cabbage", "punjabi"], "time": "22 min", "difficulty": "Medium", "serves": "3", "ingredients": ["Cabbage - 2 cups", "Onion - 1", "Ginger garlic paste - 1 tsp", "Chilli powder - 1 tsp", "Garam masala -  half tsp", "Oil - 2 tbsp", "Cumin seeds - 1 tsp", "Salt - to taste", "Coriander leaves"], "steps": ["First take a fresh cabbage, remove the outer leaves if required and wash it thoroughly under clean running water. Finely shred or chop the cabbage using a sharp knife and keep it ready in a bowl.", "Place a pan or kadai on medium flame and add about 2 tablespoons of cooking oil. Allow the oil to heat properly before adding the spices.", "Once the oil becomes hot, add cumin seeds and let them crackle for a few seconds. This helps in releasing a pleasant aroma and forms the flavour base of the sabji.", "Add finely chopped onions into the pan and sauté them patiently until they turn golden brown in colour. This step gives a rich Punjabi taste to the dish.", "Now add ginger-garlic paste and cook for a minute until the raw smell disappears and the masala becomes fragrant.", "Add the shredded cabbage into the pan and mix it well with the onion masala so that all the flavours combine properly.", "Sprinkle garam masala and red chilli powder according to taste. Mix gently so that the spices coat the cabbage evenly.", "Cover the pan with a lid and cook the sabji on medium flame for about 8-10 minutes until the cabbage becomes soft.", "Open the lid and cook the sabji uncovered for a few more minutes so that excess moisture evaporates and a slightly thick texture is obtained.", "Finally garnish the sabji with freshly chopped coriander leaves, switch off the flame and serve hot Punjabi style cabbage sabji with roti or paratha."], "tags": ["Punjabi", "Easy"]},
+  {"id": 101, "dish": "Dal Tadka", "variant": "Simple Home Style", "ingredients": ["Yellow dal (toor or moong) - 1 cup", "Water - 3 cups", "Turmeric -  half tsp", "Salt - to taste", "Oil or ghee - 1 tbsp", "Cumin seeds - 1 tsp", "Garlic - 4 cloves chopped", "Onion - 1 chopped", "Tomato - 1 chopped", "Red chilli powder - 1 tsp", "Garam masala -  half tsp", "Coriander leaves"], "steps": ["First take one cup of yellow dal and wash it thoroughly in clean water two to three times until the water becomes clear. This helps in removing dust and excess starch.", "Transfer the washed dal into a pressure cooker and add about three cups of water along with turmeric powder and a little salt for basic seasoning.", "Close the cooker lid and cook the dal for about three to four whistles on medium flame until it becomes soft and mushy. Once cooked, lightly mash the dal using a spoon and keep it aside.", "Now place a pan on medium flame and add one tablespoon of oil or ghee. Allow it to heat slowly before adding the tempering ingredients.", "Add cumin seeds and let them crackle for a few seconds so that their aroma gets released into the oil.", "Add finely chopped garlic and sauté until it turns light golden brown and fragrant.", "Add chopped onions and cook until they become soft and slightly transparent in texture.", "Now add chopped tomatoes and cook the mixture until it becomes thick and the oil starts separating from the masala.", "Add red chilli powder and garam masala. Mix all the spices properly so that they cook evenly.", "Pour the cooked dal into the prepared tadka and mix gently. Adjust the consistency by adding a little warm water if required and let it simmer for five minutes. Garnish with coriander leaves and serve hot."], "tags": ["Easy"], "keywords": ["dal tadka", "simple home style", "dal", "tadka", "lentil", "daal"]},
+  {"id": 102, "dish": "Dal Tadka", "variant": "Dhaba Style", "ingredients": ["Toor dal - 1 cup", "Butter or ghee - 2 tbsp", "Cumin seeds - 1 tsp", "Garlic - 5 cloves", "Onion - 1", "Tomato - 1", "Red chilli powder - 1 tsp", "Coriander powder - 1 tsp", "Garam masala -  half tsp", "Salt", "Coriander leaves"], "steps": ["First take one cup of toor dal and place it in a large bowl. Wash the dal thoroughly under running water two to three times by rubbing it gently with your fingers. This process helps to remove dust, excess starch and any impurities, ensuring a clean and better tasting dal.", "Transfer the washed dal into a pressure cooker and add sufficient water, usually about three cups. Add a pinch of turmeric powder and salt for basic seasoning. Close the lid properly and cook the dal on medium flame for about three to four whistles until it becomes completely soft and well cooked.", "Once the pressure releases naturally, open the cooker carefully. Using a ladle or spoon, lightly mash the dal so that it becomes creamy in texture while still retaining a little grainy consistency. Keep the cooked dal aside for further use.", "Now place a deep pan or kadai on the stove and switch on the flame to medium. Add about two tablespoons of butter or ghee and allow it to melt slowly. This step is important as it gives the dal its authentic rich dhaba style taste and aroma.", "When the butter or ghee becomes hot, add cumin seeds into the pan and let them crackle for a few seconds. Immediately add finely chopped garlic and sauté it until it turns light golden brown and releases a strong appetising fragrance.", "Add finely chopped onions into the pan and cook them patiently. Stir continuously so that they cook evenly and turn golden brown in colour, which will create a flavourful base for the dal.", "Now add chopped tomatoes and cook them well until they become soft, mushy and blend completely with the onions. Continue cooking until the oil or butter starts separating slightly from the masala mixture.", "Add red chilli powder, coriander powder and garam masala into the pan. Mix all the spices properly and cook for another minute so that their raw flavour disappears and the masala becomes aromatic.", "Pour the prepared cooked dal into this masala mixture and stir gently so that the dal combines evenly with all the flavours. If the dal appears too thick, add a little warm water to adjust the consistency as per your preference.", "Allow the dal to simmer on low flame for about six to seven minutes. This slow cooking helps all the spices blend beautifully and enhances the overall taste. Finally garnish with freshly chopped coriander leaves and drizzle a small amount of melted butter on top before serving the hot dhaba style dal with rice or roti."], "tags": ["Dhaba Style", "Easy"], "keywords": ["dal tadka", "dhaba style", "dhaba", "dal", "tadka", "lentil", "daal"]},
+  {"id": 103, "dish": "Dal Tadka", "variant": "Jain Style", "ingredients": ["Yellow dal - 1 cup", "Ghee - 1 tbsp", "Cumin seeds - 1 tsp", "Asafoetida - pinch", "Tomato - 1", "Salt", "Mild spices", "Coriander leaves"], "steps": ["First take one cup of yellow dal such as moong dal or toor dal and place it in a bowl. Wash the dal thoroughly under clean running water two to three times by gently rubbing it with your fingers. This helps remove dust, impurities and excess starch, resulting in a cleaner taste.", "Transfer the washed dal into a pressure cooker and add enough water, usually about three cups, so that the dal cooks properly. Add a pinch of turmeric powder for colour and basic flavour. Close the lid securely and cook on medium flame for three to four whistles until the dal becomes soft and tender.", "Allow the pressure to release naturally before opening the cooker lid. Once opened, use a spoon or ladle to lightly mash the dal so that it develops a slightly creamy texture while still retaining some grain structure. Keep the cooked dal aside for the tempering process.", "Now place a pan on medium flame and add about one tablespoon of ghee. Allow the ghee to heat slowly and melt completely, as this enhances the overall aroma and taste of the dal.", "When the ghee becomes hot, add cumin seeds into the pan and let them crackle gently. This step helps release their natural flavour and forms the base of the tempering.", "Add a small pinch of asafoetida (hing) into the hot ghee. Stir for a few seconds so that it blends well and releases its distinctive aroma, which is commonly used in Jain cooking.", "Now add finely chopped tomatoes into the pan and cook them patiently. Stir occasionally until the tomatoes become soft, pulpy and form a light masala consistency.", "Add salt and mild spices according to taste. Mix everything properly so that the seasoning gets distributed evenly throughout the tomato mixture.", "Pour the prepared cooked dal into the pan and stir gently so that the dal combines well with the tempering. If the dal appears too thick, add a little warm water and mix again to achieve the desired consistency.", "Allow the dal to simmer on low flame for about five minutes. This slow cooking helps the flavours blend together nicely. Finally garnish with freshly chopped coriander leaves, switch off the flame and serve the hot Jain style dal with rice or chapati."], "tags": ["Jain", "No Onion", "No Garlic", "Easy"], "keywords": ["dal tadka", "jain style", "jain", "dal", "tadka", "lentil", "daal"]},
+  {"id": 104, "dish": "Dal Tadka", "variant": "Garlic Tadka", "ingredients": ["Cooked dal - 1 cup", "Oil or ghee - 1 tbsp", "Garlic - 6 cloves", "Cumin seeds - 1 tsp", "Dry red chilli - 2", "Onion - 1", "Tomato - 1", "Spices", "Salt"], "steps": ["First take one cup of dal and wash it properly in clean water two to three times. Transfer the washed dal into a pressure cooker, add enough water and cook on medium flame for about three to four whistles until the dal becomes soft and mushy. Once cooked, lightly mash it using a spoon and keep it aside.", "Place a pan or kadai on the stove and switch on the flame to medium. Add one to two tablespoons of oil or ghee and allow it to heat gradually so that it becomes ready for tempering.", "Add a generous amount of finely chopped garlic into the hot oil or ghee. Fry the garlic patiently while stirring continuously until it turns golden brown and releases a strong, appetising aroma which gives the dal its signature flavour.", "Now add cumin seeds and dry red chillies into the pan. Let them fry for a few seconds so that their flavour gets infused into the oil and enhances the taste of the tempering.", "Add finely chopped onions and sauté them well. Cook until they become soft, slightly translucent and lightly browned, forming a rich base for the dal.", "Add chopped tomatoes into the pan and cook them patiently until they turn mushy and blend completely with the onion mixture to form a thick masala base.", "Sprinkle the required spices such as turmeric powder, red chilli powder and salt according to taste. Mix everything properly and cook for a minute so that the raw flavour of the spices disappears.", "Now pour the prepared cooked dal into this tempering and stir gently so that the dal mixes evenly with the masala and absorbs all the flavours.", "If the dal appears too thick, add a little warm water to adjust the consistency as desired. Allow the dal to simmer on low flame for a few minutes so that the taste becomes well balanced.", "Finally switch off the flame and transfer the hot garlic tadka dal into a serving bowl. Serve it fresh with jeera rice, steamed rice or soft chapati for a comforting meal."], "tags": ["Garlic", "Easy"], "keywords": ["dal tadka", "garlic tadka", "garlic", "dal", "tadka", "lentil", "daal"]},
+  {"id": 105, "dish": "Dal Tadka", "variant": "Butter Dal", "ingredients": ["Dal - 1 cup", "Butter - 2 tbsp", "Cumin seeds - 1 tsp", "Garlic - 4 cloves", "Onion - 1", "Tomato puree -  half cup", "Chilli powder", "Salt", "Cream - 2 tbsp"], "steps": ["First take one cup of dal and wash it thoroughly in clean running water two to three times. Transfer the washed dal into a pressure cooker, add enough water along with a pinch of turmeric powder and cook on medium flame for about three to four whistles until the dal becomes soft and well cooked.", "Once the pressure releases naturally, open the cooker carefully and lightly mash the cooked dal using a spoon or ladle. This helps in creating a slightly creamy texture. Keep the dal aside for preparing the butter tadka.", "Place a deep pan or kadai on the stove and switch on the flame to medium. Add two tablespoons of butter and allow it to melt slowly until it becomes hot and aromatic.", "Add cumin seeds and finely chopped garlic into the melted butter. Sauté gently for a few seconds until the garlic turns light golden and releases a pleasant fragrance.", "Now add finely chopped onions and cook them patiently while stirring occasionally. Allow them to become soft and translucent, forming a mild flavourful base for the dal.", "Pour fresh tomato puree into the pan and cook it well on medium flame. Continue stirring until the puree thickens and the butter begins to separate slightly from the masala.", "Add red chilli powder and salt according to taste. Mix the spices properly so that they cook evenly and enhance the overall flavour of the dish.", "Now pour the prepared cooked dal into the pan and mix gently so that the dal blends nicely with the butter masala.", "Add a small quantity of fresh cream into the dal to give it a rich, smooth and creamy consistency. Stir well to combine all the ingredients.", "Allow the dal to cook on low flame for about five minutes so that the flavours develop fully. Finally garnish with chopped coriander leaves, switch off the flame and serve the hot butter dal with rice or roti."], "tags": ["Rich", "Easy"], "keywords": ["dal tadka", "butter dal", "butter", "dal", "tadka", "lentil", "daal"]},
+  {"id": 106, "dish": "Dal Tadka", "variant": "Spicy Dal", "ingredients": ["Dal - 1 cup", "Oil - 1 tbsp", "Dry red chilli - 2", "Onion - 1", "Ginger garlic paste - 1 tsp", "Tomato - 1", "Extra chilli powder", "Garam masala", "Salt"], "steps": ["First take one cup of dal and wash it thoroughly in clean water two to three times to remove any dust or impurities. Transfer the washed dal into a pressure cooker, add enough water along with turmeric powder and salt, then cook on medium flame for about three to four whistles until the dal becomes soft and well cooked.", "Allow the pressure to release naturally before opening the cooker lid. Once opened, lightly mash the dal using a spoon so that it develops a slightly creamy consistency. Keep the cooked dal aside for preparing the spicy tempering.", "Place a deep pan or kadai on the stove and switch on the flame to medium. Add one to two tablespoons of cooking oil and allow it to heat properly.", "Add dry red chillies into the hot oil and fry them for a few seconds. This step helps in releasing a strong spicy aroma and gives the dal its characteristic heat.", "Now add finely chopped onions into the pan and sauté patiently while stirring occasionally. Cook until the onions turn brown and slightly caramelised, which enhances the richness of the flavour.", "Add ginger-garlic paste and cook for a minute until the raw smell disappears and the mixture becomes fragrant.", "Add chopped tomatoes into the pan and cook them well until they turn soft, mushy and blend completely with the onion mixture to form a thick masala base.", "Sprinkle extra red chilli powder and garam masala according to your spice preference. Mix everything properly and cook the spices for a short time so that their raw flavour reduces.", "Now pour the prepared cooked dal into the masala and stir thoroughly so that the dal combines evenly with all the spices. If needed, add a little warm water to adjust the consistency.", "Allow the dal to boil gently on low flame for about five minutes so that the flavours blend well. Taste the dal and adjust the spice level if required. Finally switch off the flame and serve the hot spicy dal with rice or roti."], "tags": ["Spicy", "Easy"], "keywords": ["dal tadka", "spicy dal", "spicy", "hot", "dal", "tadka", "lentil", "daal"]},
+  {"id": 107, "dish": "Dal Tadka", "variant": "Punjabi Dal", "ingredients": ["Dal - 1 cup", "Ghee - 1 tbsp", "Cumin seeds - 1 tsp", "Bay leaf - 1", "Onion - 1", "Tomato - 1", "Spices", "Salt", "Coriander leaves"], "steps": ["First take one cup of dal and place it in a bowl. Wash it thoroughly under running water two to three times to remove dust and impurities. After washing, soak the dal in clean water for about twenty minutes. Soaking helps the dal cook faster and improves its texture.", "After soaking, transfer the dal into a pressure cooker and add enough water along with turmeric powder and salt for basic seasoning. Close the lid securely and cook on medium flame for three to four whistles until the dal becomes soft and tender.", "Allow the pressure to release naturally before opening the cooker. Once opened, lightly mash the dal using a spoon or ladle so that it develops a slightly creamy consistency. Keep the cooked dal aside.", "Now place a pan or kadai on the stove and switch on the flame to medium. Add one tablespoon of ghee and allow it to heat slowly, as ghee enhances the authentic Punjabi flavour of the dal.", "Add cumin seeds and a bay leaf into the hot ghee. Let them fry for a few seconds so that their aroma gets infused into the tempering.", "Add finely chopped onions into the pan and sauté patiently while stirring occasionally. Cook until the onions turn golden brown, which will create a rich base for the dal.", "Add chopped tomatoes along with required spices such as red chilli powder and coriander powder. Cook the mixture well until it thickens and forms a flavourful masala.", "Now pour the prepared cooked dal into the pan and mix gently so that it blends evenly with the masala.", "If the dal appears too thick, add a little warm water to adjust the consistency. Allow the dal to simmer on low flame for a few minutes so that the flavours combine nicely.", "Finally garnish the dal with freshly chopped coriander leaves, switch off the flame and serve the hot Punjabi style dal with roti or steamed rice."], "tags": ["Punjabi", "Easy"], "keywords": ["dal tadka", "punjabi dal", "punjabi", "dal", "tadka", "lentil", "daal"]},
+  {"id": 108, "dish": "Dal Tadka", "variant": "Tomato Rich Dal", "ingredients": ["Dal - 1 cup", "Oil - 1 tbsp", "Cumin seeds", "Tomatoes - 2", "Turmeric", "Salt", "Sugar - pinch", "Coriander leaves"], "steps": ["First take one cup of dal and wash it thoroughly under clean running water two to three times. Transfer the washed dal into a pressure cooker, add sufficient water and cook on medium flame for about three to four whistles until the dal becomes soft and well cooked.", "Once the pressure releases naturally, open the cooker carefully and lightly mash the dal using a spoon or ladle. This helps in creating a slightly creamy texture while still maintaining some grain consistency. Keep the cooked dal aside.", "Now place a pan or kadai on the stove and switch on the flame to medium. Add about one tablespoon of cooking oil and allow it to heat properly before adding the spices.", "Add cumin seeds into the hot oil and let them crackle for a few seconds. This step releases their natural aroma and forms the flavour base for the dal.", "Add plenty of finely chopped fresh tomatoes into the pan. Cook them patiently while stirring occasionally until they become soft, pulpy and start forming a thick gravy-like consistency.", "Sprinkle turmeric powder and add salt according to taste. Mix everything properly so that the seasoning blends well with the tomato mixture.", "Now pour the prepared cooked dal into the pan and stir gently so that it combines evenly with the tomato gravy.", "Add a small pinch of sugar to balance the natural tanginess of the tomatoes. Mix well and allow the dal to cook further.", "Let the dal simmer on low flame for about five minutes so that all the flavours blend nicely and the consistency becomes slightly thick.", "Finally garnish with freshly chopped coriander leaves, switch off the flame and serve the warm tomato rich dal with steamed rice or soft chapati."], "tags": ["Tomato Rich", "Easy"], "keywords": ["dal tadka", "tomato rich dal", "tomato", "dal", "tadka", "lentil", "daal"]},
+  {"id": 109, "dish": "Dal Tadka", "variant": "Ghee Tadka Dal", "ingredients": ["Dal - 1 cup", "Pure ghee - 2 tbsp", "Cumin seeds", "Garlic", "Onion", "Tomato", "Spices", "Salt"], "steps": ["First take one cup of dal and wash it thoroughly in clean running water two to three times to remove any dust or impurities. Transfer the washed dal into a pressure cooker, add sufficient water and cook on medium flame for about three to four whistles until the dal becomes soft and fully cooked.", "Allow the pressure to release naturally before opening the cooker lid. Once opened, lightly mash the dal using a spoon or ladle so that it develops a slightly creamy consistency. Keep the cooked dal aside for preparing the ghee tempering.", "Place a deep pan or kadai on the stove and switch on the flame to medium. Add about two tablespoons of pure ghee and allow it to heat slowly until it becomes aromatic and slightly hot.", "Add cumin seeds into the hot ghee and let them crackle for a few seconds. This helps release their flavour and forms the base of the tempering.", "Now add finely chopped garlic and fry it patiently while stirring continuously until it turns light golden brown and releases a rich fragrance.", "Add finely chopped onions into the pan and sauté them well until they become soft, slightly translucent and lightly browned.", "Add chopped tomatoes along with required spices such as turmeric powder, red chilli powder and salt. Cook the mixture properly until the tomatoes become soft and the masala thickens.", "Pour the prepared cooked dal into the pan and mix gently so that the dal blends evenly with the ghee tempering and masala.", "If the dal appears too thick, add a little warm water to adjust the consistency. Allow the dal to simmer slowly on low flame for a few minutes so that it develops a rich and comforting taste.", "Finally drizzle a small amount of fresh ghee on top for extra aroma, switch off the flame and serve the hot ghee tadka dal with steamed rice or chapati."], "tags": ["Rich", "Easy"], "keywords": ["dal tadka", "ghee tadka dal", "ghee", "dal", "tadka", "lentil", "daal"]},
+  {"id": 110, "dish": "Dal Tadka", "variant": "Quick Dal", "ingredients": ["Cooked dal - 1 cup", "Oil - 1 tbsp", "Cumin seeds", "Chilli flakes", "Salt", "Turmeric", "Coriander leaves"], "steps": ["First take already cooked dal which has been prepared earlier and kept ready. Using pre-cooked dal helps to save time and makes the recipe quick and convenient for busy situations.", "Place a pan or kadai on the stove and switch on the flame to medium. Add about one tablespoon of cooking oil and allow it to heat properly before adding the tempering ingredients.", "Add cumin seeds into the hot oil and let them crackle for a few seconds. Then sprinkle chilli flakes into the pan to provide a mild spicy flavour and aroma.", "Now carefully pour the cooked dal into the pan and mix it well with the tempering so that the flavour of the spices spreads evenly throughout the dal.", "Add salt and a pinch of turmeric powder according to taste. Stir properly so that the seasoning blends well with the dal.", "Cook the dal on medium flame while stirring continuously. This prevents sticking at the bottom and ensures even heating.", "As the dal cooks, allow it to heat thoroughly and thicken slightly to reach the desired consistency. If it becomes too thick, a small amount of warm water can be added.", "Add freshly chopped coriander leaves into the dal for a fresh aroma and enhanced presentation. Mix gently.", "Once the dal is properly heated and the flavours are combined, switch off the flame.", "Transfer the hot quick dal tadka into a serving bowl and serve immediately with steamed rice, chapati or jeera rice."], "tags": ["Quick", "Easy"], "keywords": ["dal tadka", "quick dal", "quick", "fast", "dal", "tadka", "lentil", "daal"]},
+  {"id": 201, "dish": "Paneer Tikka", "variant": "Classic Tandoori", "ingredients": ["Paneer - 250 grams (cut into medium cubes)", "Thick curd - 1 cup", "Red chilli powder - 1 tsp", "Turmeric powder - 1/4 tsp", "Garam masala -  half tsp", "Ginger garlic paste - 1 tsp", "Salt - as per taste", "Lemon juice - 1 tbsp", "Mustard oil - 1 tbsp", "Capsicum - 1 chopped in cubes", "Onion - 1 cut in petals", "Butter - for brushing", "Green chutney - for serving"], "steps": ["First take fresh paneer and cut it carefully into medium sized cubes. Avoid making very small pieces because paneer may break during marination or grilling. Keep the cubes aside on a plate.", "In a large mixing bowl add thick curd. Whisk the curd properly using a spoon or whisk so that it becomes smooth and lump-free. This will help the marinade coat the paneer evenly.", "Now add red chilli powder, turmeric powder, garam masala, ginger-garlic paste and salt into the curd. Mix all the spices thoroughly so that a rich and flavourful marinade is prepared.", "Add fresh lemon juice and mustard oil into the mixture. Mustard oil gives a traditional smoky tandoori flavour, so mix it well until the marinade becomes creamy and aromatic.", "Add paneer cubes along with chopped capsicum and onion petals into the marinade. Using clean hands or a spoon gently coat each piece so that masala sticks properly on all sides.", "Cover the bowl with a lid or plastic wrap and allow it to rest for at least thirty minutes. This resting time helps the paneer absorb all the flavours deeply.", "After marination, arrange paneer, onion and capsicum alternately on skewers. This gives a beautiful restaurant style presentation and ensures even cooking.", "Heat a grill pan, tawa or oven on medium flame. Place the skewers and cook slowly while turning them from time to time so that all sides get evenly roasted.", "While grilling, brush a little butter on top of the paneer pieces. This step enhances the taste, adds shine and prevents dryness.", "Cook until the paneer becomes slightly charred at the edges and develops a golden colour. Remove from heat, transfer to a serving plate and serve hot with green chutney and lemon wedges."], "keywords": ["paneer", "paneer tikka", "tikka", "cottage cheese", "classic", "tandoori", "traditional"], "time": "30 min", "serves": "3", "difficulty": "Medium", "tags": ["Paneer", "Easy"]},
+  {"id": 202, "dish": "Paneer Tikka", "variant": "Restaurant Style", "ingredients": ["Paneer - 250 grams (cut into thick cubes)", "Warm water - 1 bowl (for soaking paneer)", "Salt - 1 tsp (for soaking)", "Hung curd - 1 cup", "Cashew paste - 2 tbsp", "Red chilli powder - 1 tsp", "Coriander powder - 1 tsp", "Ginger garlic paste - 1 tsp", "Lemon juice - 1 tbsp", "Butter - 2 tbsp", "Chaat masala -  half tsp", "Onion rings - for garnish", "Lemon wedges - for serving"], "steps": ["First take fresh paneer and cut it into thick square cubes so that it remains soft and juicy after cooking. In a bowl add warm water and mix a little salt in it. Soak the paneer cubes in this salted warm water for about ten minutes. This step helps to keep paneer soft and prevents it from becoming rubbery during cooking.", "In another large mixing bowl take hung curd. Whisk it properly until it becomes smooth and creamy. Hung curd is preferred because it is thick and helps the marinade stick nicely on paneer pieces.", "Add cashew paste into the curd. This gives a rich restaurant style creamy texture to the marinade. Mix it thoroughly so that no lumps remain.", "Now add red chilli powder, coriander powder, ginger garlic paste, salt and lemon juice. Stir everything well to form a thick and flavourful marinade.", "Remove paneer cubes from salted water and gently squeeze excess moisture. Add the paneer cubes into the marinade and coat them carefully so that masala covers every side.", "Cover the bowl and allow the paneer to marinate for about forty minutes. This resting time helps the flavours penetrate deeply inside the paneer.", "Place a non-stick pan on the stove and add butter. Allow the butter to melt slowly on medium flame until it becomes slightly hot and aromatic.", "Carefully place the marinated paneer cubes on the pan without overcrowding. Let them cook undisturbed for about two minutes so that a golden crust forms at the base.", "Gently flip the paneer pieces using a spatula and cook the other sides until all sides become light golden and slightly crisp. Sprinkle chaat masala on top for authentic restaurant taste.", "Once done, transfer the paneer tikka onto a serving plate. Garnish with fresh onion rings and lemon wedges. Serve immediately while sizzling hot for best flavour."], "keywords": ["paneer", "paneer tikka", "tikka", "cottage cheese", "restaurant", "dhaba", "hotel style"], "time": "30 min", "serves": "3", "difficulty": "Medium", "tags": ["Paneer", "Easy"]},
+  {"id": 203, "dish": "Paneer Tikka", "variant": "Malai", "ingredients": ["Paneer - 250 grams (cut into large cubes)", "Fresh cream -  half cup", "Hung curd -  half cup", "Black pepper powder -  half tsp", "Salt - as per taste", "Ginger garlic paste - 1 tsp", "Grated cheese - 2 tbsp", "Butter - for brushing", "Oil - 1 tsp", "Mint dip - for serving"], "steps": ["First take fresh paneer and cut it into slightly large cubes. Bigger pieces help in keeping the paneer juicy from inside while grilling. Place the cubes carefully on a plate.", "In a mixing bowl add hung curd and fresh cream. Whisk both ingredients together until a smooth and rich mixture is formed. This creamy base gives the tikka its signature soft texture.", "Add black pepper powder, salt and ginger garlic paste into the bowl. Mix everything properly so that the seasoning spreads evenly in the marinade.", "Now add grated cheese into the marinade and stir well. Cheese enhances the richness and helps create a thick coating on paneer pieces.", "Add paneer cubes into the creamy mixture and gently coat each cube using clean hands or a spoon. Ensure that all sides of paneer are covered properly with the malai marinade.", "Cover the bowl with a lid and refrigerate for about one hour. This resting time allows the paneer to absorb creamy flavours deeply and improves overall taste.", "After marination, arrange paneer cubes carefully on skewers or keep them ready for grilling. Handle softly to avoid breaking the delicate coating.", "Heat a grill pan or oven on low to medium flame. Lightly apply oil on the pan to prevent sticking. Place paneer pieces and cook slowly so that the creamy marinade does not burn.", "Turn the paneer cubes gently at regular intervals to achieve uniform cooking from all sides. Brush a little butter on top while grilling to keep the tikka moist and flavourful.", "Cook until paneer develops a light golden colour and becomes soft from inside. Remove from heat, transfer to a serving plate and serve hot with mint dip or green chutney."], "keywords": ["paneer", "paneer tikka", "tikka", "cottage cheese", "malai", "creamy", "white"], "time": "30 min", "serves": "3", "difficulty": "Medium", "tags": ["Paneer", "Easy"]},
+  {"id": 204, "dish": "Paneer Tikka", "variant": "Achari", "ingredients": ["Paneer - 250 grams (cut into cubes)", "Thick curd - 1 cup", "Pickle masala - 2 tsp", "Red chilli powder - 1 tsp", "Turmeric powder - 1/4 tsp", "Salt - as per taste", "Mustard oil - 1 tbsp", "Oil from pickle - 1 tsp", "Capsicum - chopped", "Onion - petals", "Lemon wedges - for serving"], "steps": ["First take fresh paneer and cut it into medium sized cubes. Keep the cubes ready on a plate so that they can be easily added into the marinade.", "In a large mixing bowl add thick curd and whisk it properly until it becomes smooth and creamy without any lumps.", "Now add pickle masala into the curd. This ingredient gives the tikka its strong achari flavour similar to Indian pickles. Mix well so that the masala spreads evenly.", "Add red chilli powder, turmeric powder and salt according to taste. Stir all the spices thoroughly to create a rich and spicy marinade.", "Pour mustard oil into the mixture and mix properly. Mustard oil enhances the authentic achari aroma and gives depth to the flavour.", "Add paneer cubes along with chopped capsicum and onion petals into the marinade. Gently coat all pieces so that masala sticks properly on every side.", "Cover the bowl and allow the paneer to rest for about thirty minutes. This resting time helps the pickle flavours to absorb deeply into the paneer.", "Heat a grill pan or tawa on medium flame and lightly grease it with oil. Place the marinated paneer pieces carefully on the pan.", "Cook the paneer slowly while turning frequently so that it does not burn and gets evenly roasted. Drizzle a little pickle oil on top for extra flavour and aroma.", "Once the paneer becomes slightly charred and aromatic, remove it from the pan. Transfer to a serving plate and serve hot achari paneer tikka with lemon wedges and chutney."], "keywords": ["paneer", "paneer tikka", "tikka", "cottage cheese", "achari", "pickle", "tangy"], "time": "30 min", "serves": "3", "difficulty": "Medium", "tags": ["Paneer", "Easy"]},
+  {"id": 205, "dish": "Paneer Tikka", "variant": "Hariyali", "ingredients": ["Paneer - 250 grams (cut into cubes)", "Fresh coriander leaves - 1 cup", "Fresh mint leaves -  half cup", "Green chilli - 2", "Thick curd -  half cup", "Garam masala -  half tsp", "Salt - as per taste", "Lemon juice - 1 tbsp", "Oil - 1 tbsp", "Butter - for brushing", "Coriander leaves - for garnish"], "steps": ["First take fresh paneer and cut it into medium sized cubes. Keep the paneer pieces ready on a clean plate so that they can be easily used for marination.", "Wash fresh coriander leaves and mint leaves thoroughly to remove any dirt. Transfer them into a mixer jar along with green chillies and grind into a smooth green paste.", "In a large mixing bowl add thick curd and whisk it until smooth. Now add the prepared green paste into the curd and mix properly to form a vibrant green marinade.", "Add garam masala, salt and fresh lemon juice into the mixture. Stir everything well so that all flavours combine evenly.", "Add paneer cubes into this green marinade and gently coat each cube so that the paste sticks on all sides. This step ensures that paneer absorbs fresh herbal flavours.", "Cover the bowl and allow the paneer to rest for about thirty minutes. This resting time helps in better flavour absorption and improves taste.", "Heat a grill pan, tawa or oven on medium flame and apply a little oil to prevent sticking. Carefully place the marinated paneer cubes on the hot surface.", "Cook the paneer slowly while turning sides gently so that it gets evenly roasted without breaking. You will notice light green char marks appearing on the surface.", "Brush a little butter on top while grilling to enhance aroma and keep the paneer moist from inside.", "Once cooked, transfer the hariyali paneer tikka to a serving plate. Garnish with fresh coriander leaves and serve hot with mint chutney or lemon slices."], "keywords": ["paneer", "paneer tikka", "tikka", "cottage cheese", "hariyali", "green", "mint", "coriander"], "time": "30 min", "serves": "3", "difficulty": "Medium", "tags": ["Paneer", "Easy"]},
+  {"id": 206, "dish": "Paneer Tikka", "variant": "Spicy Red", "ingredients": ["Paneer - 250 grams (cut into medium cubes)", "Thick curd - 1 cup", "Kashmiri red chilli powder - 2 tsp", "Ginger garlic paste - 1 tsp", "Lemon juice - 1 tbsp", "Salt - as per taste", "Turmeric powder - 1/4 tsp", "Oil - 2 tbsp", "Garam masala -  half tsp", "Butter - for brushing", "Onion rings - for serving"], "steps": ["First take fresh paneer and cut it into medium sized cubes. Ensure that the cubes are firm and not too small so that they hold their shape during cooking.", "In a mixing bowl add thick curd and whisk it properly until smooth and creamy. This will act as the base for the spicy marinade.", "Add Kashmiri red chilli powder into the curd. This chilli powder gives a bright red colour as well as mild spiciness which makes the tikka look attractive.", "Now add ginger garlic paste, turmeric powder, garam masala, salt and lemon juice. Mix all ingredients thoroughly to prepare a rich and spicy marinade.", "Add paneer cubes into the marinade and gently coat each piece using a spoon or clean hands so that masala sticks evenly on all sides.", "Cover the bowl and allow the paneer to marinate for about thirty minutes. This helps the spices to penetrate inside and enhances flavour.", "Heat a pan or grill tawa on medium flame and add a little oil. Once hot, place the marinated paneer pieces carefully on the surface.", "Cook the paneer while turning continuously so that all sides get roasted evenly and develop a slightly crisp outer layer.", "During cooking brush a little butter on top to enhance taste and prevent dryness. Continue roasting until the paneer turns reddish golden and aromatic.", "Remove from heat, transfer to a serving plate and serve hot spicy red paneer tikka with onion rings and green chutney."], "keywords": ["paneer", "paneer tikka", "tikka", "cottage cheese", "spicy", "red", "hot"], "time": "30 min", "serves": "3", "difficulty": "Medium", "tags": ["Paneer", "Easy"]},
+  {"id": 207, "dish": "Paneer Tikka", "variant": "Butter", "ingredients": ["Paneer - 250 grams (cut into cubes)", "Thick curd - 3/4 cup", "Butter - 3 tbsp", "Red chilli powder - 1 tsp", "Garam masala -  half tsp", "Ginger garlic paste - 1 tsp", "Salt - as per taste", "Lemon juice - 1 tbsp", "Oil - 1 tsp", "Coriander leaves - for garnish"], "steps": ["First take fresh paneer and cut it into medium sized cubes. Keep the cubes on a plate so that they are ready for marination. Try to handle paneer gently to avoid breaking.", "In a mixing bowl add thick curd and whisk it properly until it becomes smooth and lump free. This helps the marinade spread evenly on paneer pieces.", "Add one tablespoon of melted butter into the curd along with red chilli powder, garam masala, ginger garlic paste, salt and lemon juice. Mix everything thoroughly to prepare a rich buttery marinade.", "Now add paneer cubes into this mixture and gently coat each cube so that the masala sticks properly on all sides. This step ensures deep flavour absorption.", "Cover the bowl and allow the paneer to marinate for about thirty minutes. Resting time helps in enhancing taste and makes paneer more flavourful.", "Place a non-stick pan or grill tawa on the stove and add a little oil along with one tablespoon butter. Allow the butter to melt slowly on medium flame.", "Carefully place the marinated paneer cubes on the hot pan without overcrowding. Let them cook undisturbed for one to two minutes so that a golden crust forms.", "Gently flip the paneer pieces using a spatula and cook other sides while occasionally adding small drops of butter on top for extra richness.", "Continue cooking until the paneer becomes lightly golden from outside yet remains soft and juicy inside. The buttery aroma will indicate that it is perfectly cooked.", "Remove from heat, garnish with freshly chopped coriander leaves and serve hot butter paneer tikka with chutney or salad."], "keywords": ["paneer", "paneer tikka", "tikka", "cottage cheese", "butter", "buttery", "rich"], "time": "30 min", "serves": "3", "difficulty": "Medium", "tags": ["Paneer", "Easy"]},
+  {"id": 208, "dish": "Paneer Tikka", "variant": "Tawa", "ingredients": ["Paneer - 250 grams (cut into cubes)", "Thick curd - 3/4 cup", "Red chilli powder - 1 tsp", "Turmeric powder - 1/4 tsp", "Garam masala -  half tsp", "Ginger garlic paste - 1 tsp", "Salt - as per taste", "Lemon juice - 1 tbsp", "Oil - 2 tbsp", "Capsicum - optional", "Onion - optional"], "steps": ["First take fresh paneer and cut it into medium sized cubes. Keep them ready on a plate. If using vegetables like capsicum or onion, chop them into square pieces for better roasting.", "In a mixing bowl add thick curd and whisk it until smooth and creamy. This forms the base marinade for coating paneer.", "Add red chilli powder, turmeric powder, garam masala, ginger garlic paste, salt and lemon juice into the curd. Mix thoroughly so that a flavourful marinade is prepared.", "Add paneer cubes and optional vegetable pieces into the marinade. Gently coat all sides so that masala sticks properly and gives good taste during roasting.", "Cover the bowl and allow the paneer to rest for about twenty to thirty minutes. This resting time helps in better flavour absorption.", "Place a flat tawa on the stove and switch on medium flame. Add oil and spread it evenly on the surface so that paneer does not stick while cooking.", "Carefully place marinated paneer cubes on the hot tawa. Allow them to cook without disturbing for a minute so that the bottom side becomes slightly crisp.", "Using a spatula gently turn the paneer pieces and roast all sides one by one. You can lightly press them to create a crispy outer layer similar to street style tikka.", "Continue roasting until small brown spots appear on the surface and paneer becomes aromatic and lightly crunchy outside.", "Remove the paneer tikka from tawa, transfer to a serving plate and serve hot with chutney, onion salad or lemon wedges."], "keywords": ["paneer", "paneer tikka", "tikka", "cottage cheese", "tawa", "pan", "stove"], "time": "30 min", "serves": "3", "difficulty": "Medium", "tags": ["Paneer", "Easy"]},
+  {"id": 209, "dish": "Paneer Tikka", "variant": "Oven Baked", "ingredients": ["Paneer - 250 grams (cut into cubes)", "Thick curd - 1 cup", "Red chilli powder - 1 tsp", "Turmeric powder - 1/4 tsp", "Garam masala -  half tsp", "Ginger garlic paste - 1 tsp", "Salt - as per taste", "Lemon juice - 1 tbsp", "Oil - 1 tbsp", "Butter - for brushing", "Capsicum - chopped", "Onion - petals"], "steps": ["First take fresh paneer and cut it into medium sized cubes. Chop capsicum and onion into square pieces so that they can be baked along with paneer.", "In a mixing bowl add thick curd and whisk it properly until smooth and creamy. This helps the marinade coat paneer evenly.", "Add red chilli powder, turmeric powder, garam masala, ginger garlic paste, salt and lemon juice into the curd. Mix everything thoroughly to prepare a rich marinade.", "Add paneer cubes along with capsicum and onion pieces into the marinade. Gently coat all pieces so that masala sticks properly on every side.", "Cover the bowl and allow it to rest for about thirty minutes. This helps the paneer absorb all the flavours deeply.", "Meanwhile preheat the oven to about 200 degrees Celsius for ten minutes so that it becomes properly hot for baking.", "Arrange the marinated paneer and vegetables on a baking tray lined with foil or baking paper. Leave small gaps between pieces for even cooking.", "Place the tray inside the oven and bake for about fifteen minutes. Halfway through baking, turn the paneer pieces once so that all sides cook evenly.", "Brush a little butter on top during the final minutes of baking. This gives a smoky flavour and attractive golden colour.", "Once the paneer becomes slightly charred and aromatic, remove the tray from oven. Transfer the hot paneer tikka onto a plate and serve with green chutney or salad."], "keywords": ["paneer", "paneer tikka", "tikka", "cottage cheese", "oven", "baked", "grilled"], "time": "30 min", "serves": "3", "difficulty": "Medium", "tags": ["Paneer", "Easy"]},
+  {"id": 210, "dish": "Paneer Tikka", "variant": "Quick", "ingredients": ["Paneer - 250 grams (ready cubes)", "Thick curd -  half cup", "Red chilli powder -  half tsp", "Salt - as per taste", "Lemon juice - 1 tsp", "Oil - 1 tbsp", "Black pepper - optional", "Coriander leaves - for garnish"], "steps": ["First take ready paneer cubes and place them in a bowl. This quick recipe is useful when you want to prepare a tasty snack in very less time.", "In the same bowl add thick curd, red chilli powder, salt and a little lemon juice. Mix everything quickly to form a light and simple marinade.", "Gently coat the paneer cubes using a spoon or clean hands so that the curd mixture sticks to the surface. Since this is a quick recipe, deep marination is not required.", "Place a pan or tawa on the stove and switch on medium flame. Add one tablespoon oil and allow it to heat for a few seconds.", "Carefully place the coated paneer cubes on the hot pan. Do not overcrowd the pan so that roasting happens properly.", "Cook the paneer while stirring or tossing continuously. This ensures even heating and prevents burning.", "Allow the paneer to roast until it becomes warm and develops light golden brown spots on the outer surface.", "If desired, sprinkle a little black pepper powder on top for extra flavour and mild spiciness.", "Once done, switch off the flame and transfer the paneer tikka to a serving plate.", "Garnish with freshly chopped coriander leaves and serve immediately while hot as a quick snack or starter."], "keywords": ["paneer", "paneer tikka", "tikka", "cottage cheese", "quick", "fast", "15 min"], "time": "30 min", "serves": "3", "difficulty": "Medium", "tags": ["Paneer", "Easy"]}
+];
+
+// ── Setup Fuse.js ──
+function setupFuse(recipes) {
+  if (!recipes || recipes.length === 0) { console.warn('No recipes!'); return; }
+  allRecipes = recipes;
+  fuseInstance = null;
+  try {
+    if (typeof Fuse !== 'undefined') {
+      fuseInstance = new Fuse(allRecipes, {
+        keys: ['dish', 'keywords', 'variant', 'tags'],
+        threshold: 0.4,
+        includeScore: true,
+        minMatchCharLength: 2
+      });
+      console.log('Fuse ready! ' + allRecipes.length + ' recipes loaded');
+    } else {
+      console.warn('Fuse not available, basic search will be used');
+    }
+  } catch(e) {
+    console.warn('Fuse error:', e.message);
+    fuseInstance = null;
+  }
+}
+
+// ── Load Fuse.js then try Recipes.json ──
+function loadApp() {
+  // Always load FALLBACK first so recipes work immediately
+  allRecipes = FALLBACK;
+  renderRecentlyViewed();
+  initTheme();
+
+  var script = document.createElement('script');
+  script.src = 'https://cdn.jsdelivr.net/npm/fuse.js@7.0.0/dist/fuse.min.js';
+  script.onload = function() {
+    // Try to upgrade with Recipes.json if available
+    fetch('Recipes.json')
+      .then(function(res) { if (!res.ok) throw new Error('not ok'); return res.json(); })
+      .then(function(data) { setupFuse(data.recipes); })
+      .catch(function() {
+        // Use embedded FALLBACK with Fuse
+        setupFuse(FALLBACK);
+      });
+  };
+  script.onerror = function() {
+    // CDN blocked - use basic search with FALLBACK
+    console.warn('Fuse CDN failed, using basic search');
+    allRecipes = FALLBACK;
+  };
+  document.head.appendChild(script);
+}
+
+
+// ── NLP: Detect variation ──
+function extractVariation(input) {
+  var lower = input.toLowerCase();
+  var variantMap = [
+    { keywords: ['jain'],                      variant: 'Jain Style'         },
+    { keywords: ['no onion', 'without onion'], variant: 'Without Onion'      },
+    { keywords: ['with onion'],                variant: 'With Onion'         },
+    { keywords: ['quick dal'],                 variant: 'Quick Dal'          },
+    { keywords: ['quick paneer'],              variant: 'Quick'              },
+    { keywords: ['quick', 'fast'],             variant: 'Quick Style'        },
+    { keywords: ['spicy dal'],                 variant: 'Spicy Dal'          },
+    { keywords: ['spicy red'],                 variant: 'Spicy Red'          },
+    { keywords: ['spicy', 'hot', 'spice'],     variant: 'Spicy Style'        },
+    { keywords: ['simple home', 'simple', 'basic', 'home style'], variant: 'Simple Home Style' },
+    { keywords: ['dhaba'],                     variant: 'Dhaba Style'        },
+    { keywords: ['ghee tadka'],                variant: 'Ghee Tadka Dal'     },
+    { keywords: ['ghee'],                      variant: 'Ghee Tadka Dal'     },
+    { keywords: ['garlic tadka', 'garlic'],    variant: 'Garlic Tadka'       },
+    { keywords: ['butter dal'],                variant: 'Butter Dal'         },
+    { keywords: ['butter'],                    variant: 'Butter'             },
+    { keywords: ['punjabi dal'],               variant: 'Punjabi Dal'        },
+    { keywords: ['punjabi'],                   variant: 'Punjabi Style'      },
+    { keywords: ['tomato rich', 'tomato'],     variant: 'Tomato Rich Dal'    },
+    { keywords: ['gravy'],                     variant: 'Gravy Style'        },
+    { keywords: ['dry'],                       variant: 'Dry Style'          },
+    { keywords: ['south indian'],              variant: 'South Indian Style' },
+    { keywords: ['malai'],                     variant: 'Malai'              },
+    { keywords: ['achari', 'pickle'],          variant: 'Achari'             },
+    { keywords: ['hariyali', 'green', 'mint'], variant: 'Hariyali'           },
+    { keywords: ['tawa'],                      variant: 'Tawa'               },
+    { keywords: ['oven', 'baked'],             variant: 'Oven Baked'         },
+    { keywords: ['restaurant'],                variant: 'Restaurant Style'   },
+    { keywords: ['tandoori', 'classic'],       variant: 'Classic Tandoori'   },
+    { keywords: ['low oil'],                   variant: 'Low Oil'            }
+  ];  for (var i = 0; i < variantMap.length; i++) {
+    for (var j = 0; j < variantMap[i].keywords.length; j++) {
+      if (lower.includes(variantMap[i].keywords[j])) {
+        return variantMap[i].variant;
+      }
+    }
+  }
+  return null;
+}
+
+// ── NLP: Extract dish name ──
+function extractDishName(input) {
+  var stopWords = [
+    'give', 'me', 'make', 'show', 'find', 'search', 'get', 'i', 'want',
+    'please', 'how', 'to', 'cook', 'prepare', 'a', 'an', 'the', 'recipe',
+    'for', 'of', 'tell', 'bana', 'do', 'mujhe', 'chahiye', 'batao',
+    'dikhao', 'karo', 'banana', 'hai', 'ka', 'ki', 'ke', 'with', 'in',
+    'style', 'type', 'version',
+    'jain', 'spicy', 'hot', 'quick', 'fast', 'simple', 'basic',
+    'classic', 'dhaba', 'ghee', 'malai', 'gravy', 'dry', 'punjabi',
+    'low', 'oil', 'no', 'without', 'onion', 'garlic', 'south', 'indian'
+  ];
+  var cleaned = input.toLowerCase();
+  stopWords.forEach(function(word) {
+    var regex = new RegExp('\\b' + word + '\\b', 'gi');
+    cleaned = cleaned.replace(regex, '');
+  });
+  cleaned = cleaned.replace(/\s+/g, ' ').trim();
+  return cleaned || input;
+}
+
+// ── Search ──
+function doSearch() {
+  var raw = document.getElementById('search-input').value.trim();
+  if (!raw) { toast('Please enter a recipe name!', '⚠️'); return; }
+  if (allRecipes.length === 0) { toast('Still loading... please try again!', '⏳'); return; }
+
+  var detectedVariant = extractVariation(raw);
+  var val = extractDishName(raw);
+
+  var results = [];
+  if (fuseInstance) {
+    results = fuseInstance.search(val);
+  } else {
+    var v = val.toLowerCase();
+    results = allRecipes
+      .filter(function(r) {
+        return r.dish.toLowerCase().includes(v) ||
+               r.keywords.some(function(k) { return k.toLowerCase().includes(v); });
+      })
+      .map(function(r) { return { item: r }; });
+  }
+
+  if (results.length === 0) {
+    toast('Not found! Try: Cabbage Sabji, Dal Tadka, Paneer Tikka', '❌');
+    return;
+  }
+
+  var topDish = results[0].item.dish;
+  currentDish = topDish;
+
+  var variants = allRecipes.filter(function(r) { return r.dish === topDish; });
+  var sel = document.getElementById('var-sel');
+  sel.innerHTML = '<option value="">-- Choose a cooking style --</option>';
+  variants.forEach(function(v) {
+    var o = document.createElement('option');
+    o.value = o.textContent = v.variant;
+    sel.appendChild(o);
+  });
+
+  document.getElementById('var-dish-name').textContent = topDish;
+  show('var-card');
+  hide('recipe-card');
+
+  // Auto-select detected variation
+  if (detectedVariant) {
+    var matched = null;
+    for (var i = 0; i < variants.length; i++) {
+      if (variants[i].variant.toLowerCase() === detectedVariant.toLowerCase()) {
+        matched = variants[i]; break;
+      }
+    }
+    if (matched) {
+      sel.value = matched.variant;
+      toast('Found "' + topDish + '" → ' + matched.variant + '! 🎯', '🎯');
+      loadRecipe();
+      return;
+    }
+  }
+
+  // Default: first variant
+  toast('Found "' + topDish + '"! 🥘', '🥘');
+  if (variants.length > 0) {
+    sel.value = variants[0].variant;
+    loadRecipe();
+  }
+}
+
+function qs(q) {
+  document.getElementById('search-input').value = q;
+  doSearch();
+}
+
+// ── Load Recipe ──
+function loadRecipe() {
+  var variant = document.getElementById('var-sel').value;
+  if (!variant || !currentDish) return;
+
+  var r = null;
+  for (var i = 0; i < allRecipes.length; i++) {
+    if (allRecipes[i].dish === currentDish && allRecipes[i].variant === variant) {
+      r = allRecipes[i]; break;
+    }
+  }
+  if (!r) return;
+
+  saveRecentlyViewed(currentDish, variant);
+
+  currentRecipe = r;
+  currentStep   = 0;
+
+  document.getElementById('r-title').textContent = r.dish + ' (' + r.variant + ')';
+
+  var tagColors = {
+    'Jain':'tag-green','No Onion':'tag-green','No Garlic':'tag-green',
+    'Protein Rich':'tag-green','Beginner Friendly':'tag-green',
+    'Easy':'tag-blue','Classic':'tag-blue',
+    'Quick':'tag-amber','Under 20min':'tag-amber',
+    'Comfort Food':'tag-amber','Starter':'tag-amber','Grill':'tag-amber',
+    'Spicy':'tag-red','Medium':'tag-red'
+  };
+
+  document.getElementById('r-tags').innerHTML = r.tags.map(function(t) {
+    return '<span class="tag ' + (tagColors[t] || 'tag-blue') + '">' + t + '</span>';
+  }).join('');
+
+  document.getElementById('r-meta').innerHTML =
+    '<div class="meta-item">⏱️ ' + r.time + '</div>' +
+    '<div class="meta-item">🔥 ' + r.difficulty + '</div>' +
+    '<div class="meta-item">🍽️ Serves ' + r.serves + '</div>' +
+    '<div class="meta-item">👤 ' + userSkill + '</div>';
+
+  document.getElementById('r-ingr').innerHTML = r.ingredients.map(function(ing) {
+    return '<div class="ingr-item"><div class="ingr-dot"></div>' + ing + '</div>';
+  }).join('');
+
+  document.getElementById('r-steps').innerHTML = r.steps.map(function(s, i) {
+    return '<div class="step-item ' + (i === 0 ? 'active-step' : '') + '" id="step-' + i + '">' +
+           '<div class="step-num">' + (i + 1) + '</div>' +
+           '<div class="step-text">' + s + '</div></div>';
+  }).join('');
+
+  show('recipe-card');
+  document.getElementById('btn-pause').disabled = true;
+  document.getElementById('prog-wrap').classList.remove('show');
+  stopAudio();
+  toast('Recipe loaded! 🍳', '✅');
+  setTimeout(function() {
+    document.getElementById('recipe-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 200);
+}
+
+// ── AUDIO ──
+function toggleAudio() {
+  if (!currentRecipe) return;
+  if (isPlaying) { pauseAudio(); return; }
+  isPlaying = true;
+  document.getElementById('btn-play').textContent = '🔊 Playing...';
+  document.getElementById('btn-pause').disabled = false;
+  document.getElementById('prog-wrap').classList.add('show');
+  speakStep(currentStep);
+}
+
+function speakStep(i) {
+  if (!currentRecipe || i >= currentRecipe.steps.length) { finishAudio(); return; }
+  document.querySelectorAll('.step-item').forEach(function(el) { el.classList.remove('active-step'); });
+  var el = document.getElementById('step-' + i);
+  if (el) { el.classList.add('active-step'); el.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
+  var total = currentRecipe.steps.length;
+  document.getElementById('prog-label').textContent = 'Step ' + (i + 1);
+  document.getElementById('prog-count').textContent = (i + 1) + ' / ' + total;
+  document.getElementById('prog-fill').style.width  = ((i + 1) / total * 100) + '%';
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.cancel();
+    var lang    = document.getElementById('lang-sel').value;
+    var langMap = { en:'en-US', hi:'hi-IN', mr:'hi-IN', es:'es-ES', fr:'fr-FR' };
+    var stepText = (currentRecipe._translatedSteps && currentRecipe._translatedSteps[i])
+                 ? currentRecipe._translatedSteps[i]
+                 : currentRecipe.steps[i];
+    var u = new SpeechSynthesisUtterance('Step ' + (i + 1) + '. ' + stepText);
+    u.lang  = langMap[lang] || 'en-US';
+    u.rate  = userSkill === 'Beginner' ? 0.85 : userSkill === 'Intermediate' ? 1.0 : 1.15;
+    u.pitch = 1;
+    u.onend = function() {
+      if (isPlaying) { currentStep = i + 1; setTimeout(function() { speakStep(currentStep); }, 700); }
+    };
+    window.speechSynthesis.speak(u);
+  }
+}
+
+function pauseAudio() {
+  isPlaying = false;
+  window.speechSynthesis && window.speechSynthesis.pause();
+  document.getElementById('btn-play').textContent = '▶️ Resume';
+  document.getElementById('btn-play').onclick      = resumeAudio;
+  document.getElementById('btn-pause').disabled    = true;
+}
+
+function resumeAudio() {
+  isPlaying = true;
+  document.getElementById('btn-play').textContent = '🔊 Playing...';
+  document.getElementById('btn-play').onclick      = toggleAudio;
+  document.getElementById('btn-pause').disabled    = false;
+  if (window.speechSynthesis.paused) window.speechSynthesis.resume();
+  else speakStep(currentStep);
+}
+
+function restartAudio() {
+  stopAudio();
+  currentStep = 0;
+  document.querySelectorAll('.step-item').forEach(function(el) { el.classList.remove('active-step'); });
+  var f = document.getElementById('step-0');
+  if (f) f.classList.add('active-step');
+  document.getElementById('prog-fill').style.width = '0%';
+  toast('Restarted from Step 1', '🔁');
+}
+
+function stopAudio() {
+  isPlaying = false;
+  window.speechSynthesis && window.speechSynthesis.cancel();
+  document.getElementById('btn-play').textContent = '🔊 Play Audio';
+  document.getElementById('btn-play').onclick      = toggleAudio;
+  document.getElementById('btn-pause').disabled    = true;
+}
+
+function finishAudio() {
+  isPlaying = false;
+  document.getElementById('btn-play').textContent = '✅ Done!';
+  document.getElementById('btn-pause').disabled   = true;
+  document.getElementById('prog-fill').style.width = '100%';
+  toast('Recipe complete! Enjoy your meal 🍽️', '🎉');
+}
+
+function setSkill(btn, skill) {
+  userSkill = skill;
+  document.querySelectorAll('.skill-btn').forEach(function(b) { b.classList.remove('active'); });
+  btn.classList.add('active');
+  toast('Skill set to ' + skill, '⭐');
+}
+
+/* ================= TRANSLATION MODULE (MyMemory - Free) ================= */
+
+function myMemoryTranslate(text, targetLang) {
+  var url = 'https://api.mymemory.translated.net/get?q=' +
+            encodeURIComponent(text) + '&langpair=en|' + targetLang;
+  return fetch(url)
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      if (data.responseStatus === 200 && data.responseData.translatedText) {
+        return data.responseData.translatedText;
+      }
+      return text;
+    })
+    .catch(function() { return text; });
+}
+
+async function translateAll(arr, lang) {
+  var result = [];
+  for (var i = 0; i < arr.length; i++) {
+    var translated = await myMemoryTranslate(arr[i], lang);
+    result.push(translated);
+  }
+  return result;
+}
+
+/* ================= END TRANSLATION MODULE ================= */
+
+
+async function changeLang() {
+  var lang  = document.getElementById('lang-sel').value;
+  var names = { en:'English', hi:'Hindi', mr:'Marathi', es:'Spanish', fr:'French' };
+
+  if (lang === 'en') {
+    toast('Language: English', '🌍');
+    if (currentRecipe) loadRecipe();
+    return;
+  }
+
+  if (!currentRecipe) {
+    toast('Please load a recipe first!', '⚠️');
+    return;
+  }
+
+  toast('Translating to ' + names[lang] + '... please wait ⏳', '🌍');
+
+  try {
+    var newIngredients = await translateAll(currentRecipe.ingredients, lang);
+    var newSteps       = await translateAll(currentRecipe.steps, lang);
+
+    document.getElementById('r-ingr').innerHTML = newIngredients.map(function(ing) {
+      return '<div class="ingr-item"><div class="ingr-dot"></div>' + ing + '</div>';
+    }).join('');
+
+    document.getElementById('r-steps').innerHTML = newSteps.map(function(s, i) {
+      return '<div class="step-item ' + (i===0?'active-step':'') + '" id="step-' + i + '">' +
+             '<div class="step-num">' + (i+1) + '</div>' +
+             '<div class="step-text">' + s + '</div></div>';
+    }).join('');
+
+    currentRecipe._translatedSteps = newSteps;
+    currentStep = 0;
+    stopAudio();
+
+    toast('Translated to ' + names[lang] + '! ✅', '✅');
+
+  } catch(e) {
+    console.error('Translation error:', e);
+    toast('Translation failed! Check internet connection.', '❌');
+  }
+}
+
+
+function handleLogout() {
+  try { stopAudio(); } catch(e) {}
+  localStorage.removeItem('userName');
+  toast('See you soon! 👋', '⬅️');
+  setTimeout(function() { window.location.href = 'login.html'; }, 1500);
+}
+
+function scrollToContact() {
+  document.getElementById('contact-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function sendMessage() {
+  var name    = document.getElementById('c-name').value.trim();
+  var email   = document.getElementById('c-email').value.trim();
+  var subject = document.getElementById('c-subject').value || 'General Query';
+  var msg     = document.getElementById('c-msg').value.trim();
+
+  if (!name || !email || !msg) { toast('Please fill all fields!', '⚠️'); return; }
+
+  var btn = document.querySelector('.btn-send');
+  btn.textContent = '⏳ Sending...';
+  btn.disabled = true;
+
+  var templateParams = {
+    name:    name,
+    email:   email,
+    subject: subject,
+    message: msg
+  };
+
+  emailjs.send('service_qfw7k2v', 'template_dx8z2kv', templateParams)
+    .then(function() {
+      toast('Message sent! We will contact you soon 📩', '✅');
+      document.getElementById('c-name').value    = '';
+      document.getElementById('c-email').value   = '';
+      document.getElementById('c-msg').value     = '';
+      document.getElementById('c-subject').value = '';
+      btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Send Message';
+      btn.disabled = false;
+    })
+    .catch(function(err) {
+      console.error('EmailJS error:', err);
+      toast('Failed to send! Please try again.', '❌');
+      btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Send Message';
+      btn.disabled = false;
+    });
+}
+
+
+// ── Recently Viewed Recipes (Navbar) ──
+function saveRecentlyViewed(dish, variant) {
+  var recent = JSON.parse(localStorage.getItem('recentRecipes') || '[]');
+  recent = recent.filter(function(r) { return !(r.dish === dish && r.variant === variant); });
+  recent.unshift({ dish: dish, variant: variant });
+  if (recent.length > 4) recent = recent.slice(0, 4);
+  localStorage.setItem('recentRecipes', JSON.stringify(recent));
+  renderRecentlyViewed();
+}
+
+function renderRecentlyViewed() {
+  var container = document.getElementById('nav-recent-list');
+  if (!container) return;
+  var recent = JSON.parse(localStorage.getItem('recentRecipes') || '[]');
+  if (recent.length === 0) {
+    container.innerHTML = '<p class="nav-no-recent">No recently viewed yet</p>';
+    return;
+  }
+  container.innerHTML = '';
+  recent.forEach(function(r) {
+    var chip = document.createElement('div');
+    chip.className = 'nav-recent-chip';
+    chip.innerHTML = '<div>' +
+      '<div class="nav-recent-dish">' + r.dish + '</div>' +
+      '<div class="nav-recent-variant">' + r.variant + '</div>' +
+      '</div>';
+    chip.onclick = (function(dish, variant) {
+      return function() { loadRecentRecipe(dish, variant); };
+    })(r.dish, r.variant);
+    container.appendChild(chip);
+  });
+}
+
+function loadRecentRecipe(dish, variant) {
+  if (allRecipes.length === 0) { toast('Still loading...', '⏳'); return; }
+  document.getElementById('search-input').value = dish;
+  currentDish = dish;
+  var variants = allRecipes.filter(function(r) { return r.dish === dish; });
+  var sel = document.getElementById('var-sel');
+  sel.innerHTML = '<option value="">-- Choose a cooking style --</option>';
+  variants.forEach(function(v) {
+    var o = document.createElement('option');
+    o.value = o.textContent = v.variant;
+    sel.appendChild(o);
+  });
+  document.getElementById('var-dish-name').textContent = dish;
+  show('var-card');
+  hide('recipe-card');
+  sel.value = variant;
+  loadRecipe();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function clearRecentlyViewed() {
+  localStorage.removeItem('recentRecipes');
+  renderRecentlyViewed();
+  toast('Recently viewed cleared!', '🗑️');
+}
+
+
+// ── DARK/LIGHT MODE ──
+function toggleTheme() {
+  var body = document.body;
+  var btn  = document.getElementById('theme-btn');
+  if (body.classList.contains('light-mode')) {
+    body.classList.remove('light-mode');
+    if (btn) btn.textContent = '🌙';
+    localStorage.setItem('theme', 'dark');
+    toast('Dark mode on 🌙', '🌙');
+  } else {
+    body.classList.add('light-mode');
+    if (btn) btn.textContent = '☀️';
+    localStorage.setItem('theme', 'light');
+    toast('Light mode on ☀️', '☀️');
+  }
+}
+
+function initTheme() {
+  if (localStorage.getItem('theme') === 'light') {
+    document.body.classList.add('light-mode');
+    var btn = document.getElementById('theme-btn');
+    if (btn) btn.textContent = '☀️';
+  }
+}
+
+// ── VOICE SEARCH ──
+function startVoiceSearch() {
+  if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+    toast('Voice search not supported in this browser!', '❌');
+    return;
+  }
+  var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  var recognition = new SR();
+  var btn = document.getElementById('voice-btn');
+  var lang = document.getElementById('lang-sel').value;
+  var langMap = { en:'en-US', hi:'hi-IN', mr:'hi-IN', es:'es-ES', fr:'fr-FR' };
+  recognition.lang = langMap[lang] || 'en-US';
+  recognition.interimResults = false;
+  recognition.maxAlternatives = 1;
+  btn.classList.add('listening');
+  btn.textContent = '🔴';
+  toast('Listening... speak now!', '🎤');
+  recognition.onresult = function(e) {
+    var spoken = e.results[0][0].transcript;
+    document.getElementById('search-input').value = spoken;
+    btn.classList.remove('listening');
+    btn.textContent = '🎤';
+    toast('Heard: "' + spoken + '"', '🎤');
+    setTimeout(function() { doSearch(); }, 500);
+  };
+  recognition.onerror = function() {
+    btn.classList.remove('listening');
+    btn.textContent = '🎤';
+    toast('Could not hear. Try again!', '❌');
+  };
+  recognition.onend = function() {
+    btn.classList.remove('listening');
+    btn.textContent = '🎤';
+  };
+  recognition.start();
+}
+
+// ── INGREDIENT SEARCH ──
+function switchSearchTab(tab) {
+  document.getElementById('tab-dish').classList.toggle('active', tab === 'dish');
+  document.getElementById('tab-ingr').classList.toggle('active', tab === 'ingr');
+  document.getElementById('dish-search-panel').style.display = tab === 'dish' ? 'block' : 'none';
+  document.getElementById('ingr-search-panel').classList.toggle('active', tab === 'ingr');
+}
+
+function searchByIngredients() {
+  var input = document.getElementById('ingr-input').value.trim().toLowerCase();
+  if (!input) { toast('Please enter some ingredients!', '⚠️'); return; }
+  if (allRecipes.length === 0) { toast('Still loading...', '⏳'); return; }
+  var userIngredients = input.split(/[,\s]+/).filter(function(i) { return i.length > 2; });
+  if (userIngredients.length === 0) { toast('Enter at least one ingredient!', '⚠️'); return; }
+  var scored = allRecipes.map(function(r) {
+    var recipeIngr = r.ingredients.join(' ').toLowerCase();
+    var matchCount = userIngredients.filter(function(ing) { return recipeIngr.includes(ing); }).length;
+    return { recipe: r, score: matchCount, total: userIngredients.length };
+  });
+  var matches = scored.filter(function(s) { return s.score > 0; })
+    .sort(function(a, b) { return b.score - a.score; }).slice(0, 6);
+  var container = document.getElementById('ingr-results');
+  container.innerHTML = '';
+  if (matches.length === 0) {
+    container.innerHTML = '<p style="color:var(--muted);font-size:0.85rem;text-align:center;padding:10px;">No recipes found. Try: cabbage, dal, cumin</p>';
+    return;
+  }
+  var header = document.createElement('div');
+  header.className = 'sec-label';
+  header.style.marginTop = '4px';
+  header.style.marginBottom = '10px';
+  header.textContent = 'Found ' + matches.length + ' matching recipes';
+  container.appendChild(header);
+  matches.forEach(function(m) {
+    var div = document.createElement('div');
+    div.className = 'ingr-result-item';
+    div.innerHTML = '<div class="ingr-result-left">' +
+      '<h4>' + m.recipe.dish + ' - ' + m.recipe.variant + '</h4>' +
+      '<p>Time: ' + (m.recipe.time || 'N/A') + ' | ' + (m.recipe.difficulty || 'Easy') + '</p>' +
+      '</div>' +
+      '<span class="ingr-match-badge">' + m.score + '/' + m.total + ' match</span>';
+    div.onclick = (function(dish, variant) {
+      return function() { loadFromIngredientSearch(dish, variant); };
+    })(m.recipe.dish, m.recipe.variant);
+    container.appendChild(div);
+  });
+}
+
+function loadFromIngredientSearch(dish, variant) {
+  switchSearchTab('dish');
+  document.getElementById('search-input').value = dish;
+  currentDish = dish;
+  var variants = allRecipes.filter(function(r) { return r.dish === dish; });
+  var sel = document.getElementById('var-sel');
+  sel.innerHTML = '<option value="">-- Choose a cooking style --</option>';
+  variants.forEach(function(v) {
+    var o = document.createElement('option');
+    o.value = o.textContent = v.variant;
+    sel.appendChild(o);
+  });
+  document.getElementById('var-dish-name').textContent = dish;
+  show('var-card'); hide('recipe-card');
+  sel.value = variant;
+  loadRecipe();
+}
+
+function toast(msg, ico) {
+  if (ico === undefined) ico = '✅';
+  document.getElementById('t-msg').textContent = msg;
+  document.getElementById('t-ico').textContent = ico;
+  var t = document.getElementById('toast');
+  t.classList.add('show');
+  setTimeout(function() { t.classList.remove('show'); }, 2800);
+}
+
+
+function show(id) { document.getElementById(id).classList.remove('hidden'); }
+function hide(id) { document.getElementById(id).classList.add('hidden'); }
+
+loadApp();
+
+// Initialize EmailJS
+(function() { emailjs.init('rDvrnpoZViIRZrZrc'); })();

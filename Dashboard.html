@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CookAI – Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --amber: #F5A623;
+    --amber-dark: #C47F00;
+    --amber-pale: rgba(245,166,35,0.08);
+    --dark: #0F0600;
+    --dark-2: #1A0C00;
+    --dark-card: #1E1005;
+    --dark-input: #2A1608;
+    --dark-border: rgba(245,166,35,0.12);
+    --muted: #8A6A3A;
+    --text: #F5EDD8;
+    --text-dim: #B8935A;
+    --error: #FF6B6B;
+  }
+
+  body { font-family: 'DM Sans', sans-serif; background: var(--dark); color: var(--text); min-height: 100vh; }
+
+  .bg-layer {
+    position: fixed; inset: 0; z-index: 0;
+    background: radial-gradient(ellipse at 10% 20%, rgba(61,31,0,0.7) 0%, transparent 50%),
+                radial-gradient(ellipse at 90% 80%, rgba(42,18,0,0.5) 0%, transparent 50%), #0F0600;
+  }
+  .bg-layer::after {
+    content: ''; position: absolute; inset: 0;
+    background-image: radial-gradient(circle, rgba(245,166,35,0.035) 1px, transparent 1px);
+    background-size: 38px 38px;
+  }
+
+  .particle { position: fixed; font-size: 1.3rem; opacity: 0.05; animation: floatUp linear infinite; z-index: 0; pointer-events: none; }
+  @keyframes floatUp {
+    0%   { transform: translateY(110vh) rotate(0deg);  opacity: 0; }
+    10%  { opacity: 0.05; }
+    90%  { opacity: 0.05; }
+    100% { transform: translateY(-10vh) rotate(360deg); opacity: 0; }
+  }
+
+  /* NAV */
+  nav {
+    position: sticky; top: 0; z-index: 50;
+    background: rgba(26,12,0,0.88); backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--dark-border);
+    padding: 0 40px; height: 66px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .nav-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+  .nav-brand-icon { font-size: 1.7rem; }
+  .nav-brand-name { font-family: 'Playfair Display', serif; font-size: 1.4rem; font-weight: 700; color: var(--amber); }
+  .nav-brand-sub { font-size: 0.68rem; color: var(--muted); font-weight: 400; letter-spacing: 0.04em; }
+  .nav-right { display: flex; align-items: center; gap: 12px; }
+  .nav-menu { display: flex; align-items: center; gap: 4px; margin-right: 16px; }
+  .nav-link { cursor: pointer;
+    padding: 8px 18px;
+    border-radius: 10px;
+    color: var(--text-dim);
+    font-size: 0.88rem; font-weight: 600;
+    text-decoration: none;
+    transition: all 0.25s;
+    border: 1px solid transparent;
+  }
+  .nav-link:hover { color: var(--amber); border-color: var(--dark-border); background: var(--amber-pale); }
+
+  .lang-wrap { position: relative; display: flex; align-items: center; }
+  .lang-ico { position: absolute; left: 10px; font-size: 0.9rem; pointer-events: none; }
+  .lang-sel {
+    appearance: none; background: var(--dark-input); border: 1px solid var(--dark-border);
+    border-radius: 10px; color: var(--text); font-family: 'DM Sans', sans-serif;
+    font-size: 0.82rem; font-weight: 500; padding: 8px 28px 8px 30px; cursor: pointer; outline: none;
+  }
+  .lang-sel:focus { border-color: var(--amber); }
+  .lang-arrow { position: absolute; right: 8px; font-size: 0.6rem; pointer-events: none; color: var(--muted); }
+  .lang-sel option { background: var(--dark-card); }
+
+  .nav-avatar {
+    width: 38px; height: 38px; border-radius: 50%;
+    background: var(--amber-pale); border: 2px solid var(--amber);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.9rem; font-weight: 700; color: var(--amber); cursor: pointer;
+  }
+  .btn-logout {
+    display: flex; align-items: center; gap: 6px; padding: 8px 16px;
+    background: transparent; border: 1px solid var(--dark-border);
+    border-radius: 10px; color: var(--muted);
+    font-family: 'DM Sans', sans-serif; font-size: 0.82rem; font-weight: 600; cursor: pointer; transition: all 0.25s;
+  }
+  .btn-logout:hover { border-color: var(--error); color: var(--error); background: rgba(255,107,107,0.06); }
+
+  /* MAIN */
+  main { position: relative; z-index: 1; max-width: 820px; margin: 0 auto; padding: 44px 24px 80px; }
+
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* WELCOME */
+  .welcome { text-align: center; margin-bottom: 40px; animation: fadeUp 0.6s ease both; }
+  .welcome h1 { font-family: 'Playfair Display', serif; font-size: 2.1rem; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+  .welcome h1 span { color: var(--amber); }
+  .welcome p { font-size: 0.88rem; color: var(--muted); font-weight: 300; }
+
+  .skill-toggle {
+    display: inline-flex; background: var(--dark-input);
+    border: 1px solid var(--dark-border); border-radius: 30px; padding: 4px; margin-top: 18px; gap: 4px;
+  }
+  .skill-btn {
+    padding: 7px 18px; border-radius: 24px; border: none; background: transparent;
+    color: var(--muted); font-family: 'DM Sans', sans-serif; font-size: 0.8rem; font-weight: 600;
+    cursor: pointer; transition: all 0.3s;
+  }
+  .skill-btn.active { background: var(--amber); color: var(--dark); }
+
+  /* CARD BASE */
+  .card {
+    background: rgba(30,16,5,0.7); border: 1px solid var(--dark-border);
+    border-radius: 22px; padding: 30px 32px;
+    backdrop-filter: blur(20px); box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+    margin-bottom: 20px;
+  }
+  .card-anim-1 { animation: fadeUp 0.6s 0.05s ease both; opacity: 0; animation-fill-mode: forwards; }
+  .card-anim-2 { animation: fadeUp 0.6s 0.15s ease both; opacity: 0; animation-fill-mode: forwards; }
+  .card-anim-3 { animation: fadeUp 0.6s 0.25s ease both; opacity: 0; animation-fill-mode: forwards; }
+
+  .sec-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin-bottom: 12px; }
+
+  /* SEARCH */
+  .search-row { display: flex; gap: 10px; align-items: center; }
+  .sinput-wrap { position: relative; flex: 1; }
+  .sinput-wrap .sico { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); font-size: 1rem; opacity: 0.4; pointer-events: none; }
+  .sinput-wrap input {
+    width: 100%; padding: 14px 16px 14px 46px;
+    background: var(--dark-input); border: 1px solid var(--dark-border);
+    border-radius: 14px; color: var(--text);
+    font-family: 'DM Sans', sans-serif; font-size: 0.95rem; outline: none; transition: all 0.3s;
+  }
+  .sinput-wrap input::placeholder { color: rgba(138,106,58,0.55); }
+  .sinput-wrap input:focus { border-color: var(--amber); background: rgba(42,22,8,0.9); box-shadow: 0 0 0 3px rgba(245,166,35,0.08); }
+
+  .btn-search {
+    padding: 14px 26px; background: linear-gradient(135deg, var(--amber), var(--amber-dark));
+    border: none; border-radius: 14px; color: var(--dark);
+    font-family: 'DM Sans', sans-serif; font-size: 0.92rem; font-weight: 700;
+    cursor: pointer; white-space: nowrap; transition: all 0.3s; position: relative; overflow: hidden;
+  }
+  .btn-search::before { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent); transition: left 0.5s; }
+  .btn-search:hover::before { left: 100%; }
+  .btn-search:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(245,166,35,0.35); }
+
+  .quick-chips { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+  .qchip {
+    padding: 6px 14px; background: var(--dark-input); border: 1px solid var(--dark-border);
+    border-radius: 20px; font-size: 0.78rem; font-weight: 600; color: var(--muted);
+    cursor: pointer; transition: all 0.25s;
+  }
+  .qchip:hover { border-color: var(--amber); color: var(--amber); background: var(--amber-pale); }
+
+  /* VARIATION */
+  .hidden { display: none; }
+  .vsel-wrap { position: relative; }
+  .vsel-wrap .vico { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); font-size: 1rem; pointer-events: none; }
+  .vsel-wrap select {
+    width: 100%; appearance: none;
+    padding: 14px 46px 14px 46px; background: var(--dark-input);
+    border: 1px solid var(--dark-border); border-radius: 14px;
+    color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 0.95rem; font-weight: 500;
+    cursor: pointer; outline: none; transition: all 0.3s;
+  }
+  .vsel-wrap select:focus { border-color: var(--amber); box-shadow: 0 0 0 3px rgba(245,166,35,0.08); }
+  .vsel-wrap select option { background: var(--dark-card); }
+  .vsel-wrap .varrow { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); font-size: 0.8rem; pointer-events: none; color: var(--muted); }
+
+  /* RECIPE CARD */
+  .recipe-title-row { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 16px; }
+  .recipe-title-row h2 { font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: 700; color: var(--text); margin-bottom: 10px; }
+  .tags { display: flex; flex-wrap: wrap; gap: 6px; }
+  .tag { padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 700; border: 1px solid; }
+  .tag-green { background: rgba(76,175,80,0.12); color: #6BCB77; border-color: rgba(107,203,119,0.25); }
+  .tag-amber { background: rgba(245,166,35,0.12); color: var(--amber); border-color: rgba(245,166,35,0.25); }
+  .tag-blue  { background: rgba(74,111,165,0.12); color: #7EB3FF; border-color: rgba(74,111,165,0.25); }
+  .tag-red   { background: rgba(255,107,107,0.12);color: #FF9090; border-color: rgba(255,107,107,0.25); }
+
+  .meta-row { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 22px; }
+  .meta-item { display: flex; align-items: center; gap: 6px; font-size: 0.84rem; color: var(--text-dim); font-weight: 500; }
+
+  .ingr-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 8px; margin-bottom: 22px; }
+  .ingr-item {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 0.86rem; color: var(--text);
+    background: var(--dark-input); border: 1px solid var(--dark-border);
+    border-radius: 10px; padding: 10px 14px;
+  }
+  .ingr-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--amber); flex-shrink: 0; }
+
+  .steps-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 24px; }
+  .step-item {
+    display: flex; gap: 12px; align-items: flex-start;
+    padding: 13px 15px; background: var(--dark-input);
+    border: 1px solid var(--dark-border); border-radius: 12px; transition: all 0.3s;
+  }
+  .step-item.active-step { border-color: var(--amber); background: rgba(245,166,35,0.06); }
+  .step-num {
+    width: 26px; height: 26px; border-radius: 50%;
+    background: var(--amber-pale); border: 1px solid var(--dark-border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.72rem; font-weight: 700; color: var(--amber); flex-shrink: 0; margin-top: 1px;
+  }
+  .step-item.active-step .step-num { background: var(--amber); color: var(--dark); }
+  .step-text { font-size: 0.86rem; color: var(--text); line-height: 1.6; }
+
+  .divider { height: 1px; background: var(--dark-border); margin: 22px 0; }
+
+  /* AUDIO */
+  .audio-controls { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .btn-play-main {
+    display: flex; align-items: center; gap: 8px; padding: 13px 26px;
+    background: linear-gradient(135deg, var(--amber), var(--amber-dark));
+    border: none; border-radius: 13px; color: var(--dark);
+    font-family: 'DM Sans', sans-serif; font-size: 0.92rem; font-weight: 700;
+    cursor: pointer; transition: all 0.3s;
+  }
+  .btn-play-main:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(245,166,35,0.35); }
+  .btn-sec {
+    display: flex; align-items: center; gap: 6px; padding: 13px 18px;
+    background: var(--dark-input); border: 1px solid var(--dark-border);
+    border-radius: 13px; color: var(--text-dim);
+    font-family: 'DM Sans', sans-serif; font-size: 0.86rem; font-weight: 600;
+    cursor: pointer; transition: all 0.3s;
+  }
+  .btn-sec:hover { border-color: var(--amber); color: var(--amber); }
+  .btn-sec:disabled { opacity: 0.35; cursor: not-allowed; }
+
+  .progress-wrap { margin-top: 16px; display: none; }
+  .progress-wrap.show { display: block; }
+  .progress-info { display: flex; justify-content: space-between; font-size: 0.74rem; color: var(--muted); margin-bottom: 6px; }
+  .progress-bar { height: 4px; border-radius: 2px; background: var(--dark-input); overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--amber); border-radius: 2px; width: 0%; transition: width 0.5s linear; }
+
+  /* TOAST */
+  /* CONTACT SECTION */
+  .contact-section {
+    position: relative; z-index: 1;
+    border-top: 1px solid var(--dark-border);
+    padding: 50px 40px 30px; margin-top: 20px;
+  }
+  .contact-inner {
+    max-width: 1100px; margin: 0 auto;
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 24px; margin-bottom: 24px;
+  }
+  .contact-card {
+    background: rgba(30,16,5,0.7);
+    border: 1px solid var(--dark-border);
+    border-radius: 18px; padding: 28px 30px;
+    backdrop-filter: blur(20px);
+  }
+  .contact-heading { font-size: 1.1rem; font-weight: 700; color: var(--text); margin-bottom: 22px; }
+  .cfield { margin-bottom: 16px; }
+  .cfield label { display: block; font-size: 0.78rem; font-weight: 500; color: var(--text-dim); margin-bottom: 7px; }
+  .cfield input, .cfield textarea {
+    width: 100%; padding: 12px 14px;
+    background: var(--dark-input); border: 1px solid var(--dark-border);
+    border-radius: 10px; color: var(--text);
+    font-family: "DM Sans", sans-serif; font-size: 0.88rem;
+    outline: none; transition: all 0.3s; resize: vertical;
+  }
+  .cfield input::placeholder, .cfield textarea::placeholder { color: rgba(138,106,58,0.5); }
+  .cfield input:focus, .cfield textarea:focus { border-color: var(--amber); box-shadow: 0 0 0 3px rgba(245,166,35,0.08); background: rgba(42,22,8,0.9); }
+  .csel-wrap { position: relative; }
+  .csel-wrap select {
+    width: 100%; appearance: none;
+    padding: 12px 36px 12px 14px; background: var(--dark-input);
+    border: 1px solid var(--dark-border); border-radius: 10px; color: var(--text);
+    font-family: "DM Sans", sans-serif; font-size: 0.88rem; cursor: pointer; outline: none;
+  }
+  .csel-wrap select:focus { border-color: var(--amber); }
+  .csel-wrap select option { background: var(--dark-card); }
+  .csel-arrow { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 0.65rem; color: var(--muted); pointer-events: none; }
+  .btn-send {
+    width: 100%; padding: 14px; background: #1877F2;
+    border: none; border-radius: 10px; color: white;
+    font-family: "DM Sans", sans-serif; font-size: 0.92rem; font-weight: 700;
+    cursor: pointer; transition: all 0.3s;
+    display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 4px;
+  }
+  .btn-send:hover { background: #0d6efd; transform: translateY(-2px); box-shadow: 0 8px 24px rgba(24,119,242,0.3); }
+  .contact-right { display: flex; flex-direction: column; gap: 16px; }
+  .info-list { display: flex; flex-direction: column; gap: 18px; }
+  .info-item { display: flex; align-items: flex-start; gap: 14px; }
+  .info-icon { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0; }
+  .info-label { font-size: 0.88rem; font-weight: 700; color: var(--text); margin-bottom: 3px; }
+  .info-val { font-size: 0.8rem; color: var(--text-dim); font-weight: 400; line-height: 1.6; }
+  .social-icons { display: flex; gap: 12px; }
+  .sicon-btn { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; text-decoration: none; transition: all 0.3s; }
+  .sicon-btn:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,0.3); }
+  .contact-copy { text-align: center; font-size: 0.72rem; color: var(--muted); font-weight: 300; padding-top: 10px; border-top: 1px solid var(--dark-border); max-width: 1100px; margin: 0 auto; }
+  @media (max-width: 768px) { .contact-section { padding: 40px 16px 24px; } .contact-inner { grid-template-columns: 1fr; } }
+
+  .toast {
+    position: fixed; bottom: 28px; right: 28px;
+    background: var(--dark-card); border: 1px solid rgba(245,166,35,0.2);
+    border-radius: 14px; padding: 13px 20px;
+    display: flex; align-items: center; gap: 10px;
+    font-size: 0.84rem; color: var(--text); font-weight: 500;
+    box-shadow: 0 16px 50px rgba(0,0,0,0.5);
+    transform: translateY(80px); opacity: 0;
+    transition: all 0.4s cubic-bezier(0.34,1.56,0.64,1); z-index: 100;
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+
+  @media (max-width: 640px) {
+    nav { padding: 0 16px; }
+    .nav-brand-sub { display: none; }
+    main { padding: 28px 16px 60px; }
+    .welcome h1 { font-size: 1.6rem; }
+    .search-row { flex-direction: column; }
+    .btn-search { width: 100%; }
+    .ingr-grid { grid-template-columns: 1fr; }
+    .audio-controls { flex-direction: column; }
+    .btn-play-main, .btn-sec { width: 100%; justify-content: center; }
+  }
+
+  /* Recently Viewed Navbar Dropdown */
+  .nav-dropdown { position: relative; }
+  .nav-dropdown-menu {
+    display: none;
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    width: 280px;
+    background: rgba(26,12,0,0.97);
+    border: 1px solid var(--dark-border);
+    border-radius: 16px;
+    padding: 16px;
+    backdrop-filter: blur(20px);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+    z-index: 200;
+  }
+  .nav-dropdown:hover .nav-dropdown-menu { display: block; }
+  .nav-dropdown-title {
+    font-size: 0.7rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--muted); margin-bottom: 10px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .nav-clear-btn {
+    background: none; border: none; color: var(--muted);
+    font-size: 0.7rem; cursor: pointer;
+    font-family: 'DM Sans', sans-serif; font-weight: 600;
+  }
+  .nav-clear-btn:hover { color: var(--error); }
+  .nav-recent-chip {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px;
+    background: var(--dark-input);
+    border: 1px solid var(--dark-border);
+    border-radius: 10px;
+    cursor: pointer; transition: all 0.25s;
+    margin-bottom: 6px;
+  }
+  .nav-recent-chip:last-child { margin-bottom: 0; }
+  .nav-recent-chip:hover { border-color: var(--amber); background: var(--amber-pale); }
+  .nav-recent-dish { font-size: 0.82rem; font-weight: 600; color: var(--text); }
+  .nav-recent-variant { font-size: 0.7rem; color: var(--muted); }
+  .nav-no-recent { font-size: 0.8rem; color: var(--muted); text-align: center; padding: 8px 0; }
+
+
+  /* Dark/Light Mode */
+  body.light-mode {
+    --dark: #F5F0E8; --dark-2: #EDE8DE; --dark-card: #FAF7F2;
+    --dark-input: #EDE8DE; --dark-border: rgba(180,120,0,0.2);
+    --muted: #8A6A3A; --text: #2C1A08; --text-dim: #6B4C2A;
+  }
+  body.light-mode .bg-layer {
+    background: radial-gradient(ellipse at 10% 20%, rgba(255,220,150,0.4) 0%, transparent 50%),
+                radial-gradient(ellipse at 90% 80%, rgba(255,200,100,0.3) 0%, transparent 50%), #F5F0E8;
+  }
+  body.light-mode .bg-layer::after {
+    background-image: radial-gradient(circle, rgba(180,120,0,0.06) 1px, transparent 1px);
+  }
+  body.light-mode nav { background: rgba(245,240,232,0.95); }
+  body.light-mode .card { background: rgba(255,252,248,0.9); box-shadow: 0 8px 30px rgba(107,76,42,0.1); }
+  body.light-mode .contact-card { background: rgba(255,252,248,0.9); }
+  .theme-btn {
+    width: 38px; height: 38px; border-radius: 50%;
+    background: var(--dark-input); border: 1px solid var(--dark-border);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 1rem; transition: all 0.3s;
+  }
+  .theme-btn:hover { border-color: var(--amber); background: var(--amber-pale); }
+
+  /* Voice Search */
+  .btn-voice {
+    padding: 14px 16px;
+    background: var(--dark-input); border: 1px solid var(--dark-border);
+    border-radius: 14px; color: var(--text-dim);
+    font-size: 1.1rem; cursor: pointer; transition: all 0.3s;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .btn-voice:hover { border-color: var(--amber); color: var(--amber); }
+  .btn-voice.listening {
+    border-color: #FF6B6B; color: #FF6B6B;
+    background: rgba(255,107,107,0.1);
+    animation: pulse-red 1s ease-in-out infinite;
+  }
+  @keyframes pulse-red {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(255,107,107,0.4); }
+    50% { box-shadow: 0 0 0 8px rgba(255,107,107,0); }
+  }
+
+  /* Ingredient Search */
+  .search-tabs {
+    display: flex; gap: 4px; margin-bottom: 14px;
+    background: var(--dark-input); border-radius: 10px; padding: 4px;
+    border: 1px solid var(--dark-border);
+  }
+  .search-tab {
+    flex: 1; padding: 8px; border: none; border-radius: 7px;
+    background: transparent; color: var(--muted);
+    font-family: 'DM Sans', sans-serif; font-size: 0.82rem; font-weight: 600;
+    cursor: pointer; transition: all 0.3s;
+  }
+  .search-tab.active { background: var(--amber); color: var(--dark); }
+  .ingr-search-panel { display: none; }
+  .ingr-search-panel.active { display: block; }
+  .ingr-search-panel textarea {
+    width: 100%; padding: 12px 16px;
+    background: var(--dark-input); border: 1px solid var(--dark-border);
+    border-radius: 14px; color: var(--text);
+    font-family: 'DM Sans', sans-serif; font-size: 0.9rem;
+    outline: none; resize: none; height: 80px; transition: all 0.3s;
+  }
+  .ingr-search-panel textarea::placeholder { color: rgba(138,106,58,0.55); }
+  .ingr-search-panel textarea:focus { border-color: var(--amber); box-shadow: 0 0 0 3px rgba(245,166,35,0.08); }
+  .ingr-results { margin-top: 12px; }
+  .ingr-result-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 16px; background: var(--dark-input);
+    border: 1px solid var(--dark-border); border-radius: 12px;
+    margin-bottom: 8px; cursor: pointer; transition: all 0.3s;
+  }
+  .ingr-result-item:hover { border-color: var(--amber); background: var(--amber-pale); }
+  .ingr-result-left h4 { font-size: 0.9rem; font-weight: 600; color: var(--text); margin-bottom: 3px; }
+  .ingr-result-left p { font-size: 0.75rem; color: var(--muted); }
+  .ingr-match-badge {
+    padding: 4px 10px; border-radius: 20px;
+    background: var(--amber-pale); color: var(--amber);
+    font-size: 0.72rem; font-weight: 700; border: 1px solid rgba(245,166,35,0.25);
+    white-space: nowrap;
+  }
+
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+</head>
+<body>
+
+<div class="bg-layer"></div>
+<div class="particle" style="left:5%;  animation-duration:14s; animation-delay:0s">🌿</div>
+<div class="particle" style="left:20%; animation-duration:19s; animation-delay:3s">🍋</div>
+<div class="particle" style="left:40%; animation-duration:12s; animation-delay:6s">🧄</div>
+<div class="particle" style="left:62%; animation-duration:17s; animation-delay:1s">🌶️</div>
+<div class="particle" style="left:80%; animation-duration:15s; animation-delay:4s">🥕</div>
+<div class="particle" style="left:93%; animation-duration:20s; animation-delay:7s">🍃</div>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-brand" href="#">
+    <span class="nav-brand-icon">👨‍🍳</span>
+    <div>
+      <div class="nav-brand-name">CookAI</div>
+      <div class="nav-brand-sub">AI Multilingual Recipe Assistant</div>
+    </div>
+  </a>
+  <div class="nav-menu">
+    <span class="nav-link" onclick="scrollToContact()">Contact Us</span>
+    <div class="nav-dropdown">
+      <span class="nav-link">&#128336; Recently Viewed &#9660;</span>
+      <div class="nav-dropdown-menu">
+        <div class="nav-dropdown-title">
+          <span>Recently Viewed</span>
+          <button class="nav-clear-btn" onclick="clearRecentlyViewed()">Clear All</button>
+        </div>
+        <div id="nav-recent-list">
+          <p class="nav-no-recent">No recently viewed yet</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="nav-right">
+    <div class="lang-wrap">
+      <span class="lang-ico">🌍</span>
+      <select class="lang-sel" id="lang-sel" onchange="changeLang()">
+        <option value="en">English</option>
+        <option value="hi">Hindi</option>
+        <option value="mr">Marathi</option>
+        <option value="es">Spanish</option>
+        <option value="fr">French</option>
+      </select>
+      <span class="lang-arrow">▼</span>
+    </div>
+    <button class="theme-btn" id="theme-btn" onclick="toggleTheme()" title="Toggle Dark/Light Mode">🌙</button>
+    <div class="nav-avatar">V</div>
+    <button class="btn-logout" onclick="handleLogout()">⬅️ Logout</button>
+  </div>
+</nav>
+
+<main>
+
+  <!-- Welcome -->
+  <div class="welcome">
+    <h1>What are we cooking, <span id="uname">Chef</span>? 🍳</h1>
+    <p>Search any dish and get step-by-step audio guided recipe</p>
+    <div class="skill-toggle">
+      <button class="skill-btn active" onclick="setSkill(this,'Beginner')">👶 Beginner</button>
+      <button class="skill-btn" onclick="setSkill(this,'Intermediate')">👨‍🍳 Intermediate</button>
+      <button class="skill-btn" onclick="setSkill(this,'Expert')">⭐ Expert</button>
+    </div>
+  </div>
+
+  <!-- Search -->
+  <div class="card card-anim-1">
+    <div class="search-tabs">
+      <button class="search-tab active" id="tab-dish" onclick="switchSearchTab('dish')">🔍 Search by Dish</button>
+      <button class="search-tab" id="tab-ingr" onclick="switchSearchTab('ingr')">🥬 Search by Ingredients</button>
+    </div>
+    <!-- Dish Search -->
+    <div id="dish-search-panel">
+      <div class="search-row">
+        <div class="sinput-wrap">
+          <span class="sico">🍽️</span>
+          <input type="text" id="search-input" placeholder='Search recipe (e.g., "Cabbage Sabji", "Dal Tadka")' onkeydown="if(event.key==='Enter') doSearch()">
+        </div>
+        <button class="btn-voice" id="voice-btn" onclick="startVoiceSearch()" title="Voice Search">🎤</button>
+        <button class="btn-search" onclick="doSearch()">Search 🔍</button>
+      </div>
+      <div class="quick-chips">
+        <span class="qchip" onclick="qs('Cabbage Sabji')">🥬 Cabbage Sabji</span>
+        <span class="qchip" onclick="qs('Dal Tadka')">🫙 Dal Tadka</span>
+        <span class="qchip" onclick="qs('Paneer Tikka')">🧀 Paneer Tikka</span>
+        <span class="qchip" onclick="qs('Jain Recipes')">🌿 Jain</span>
+        <span class="qchip" onclick="qs('Quick Recipes')">⏱️ Quick</span>
+      </div>
+    </div>
+    <!-- Ingredient Search -->
+    <div class="ingr-search-panel" id="ingr-search-panel">
+      <textarea id="ingr-input" placeholder="Type ingredients you have... e.g. cabbage, cumin, turmeric"></textarea>
+      <button class="btn-search" style="width:100%; margin-top:10px;" onclick="searchByIngredients()">Find Recipes 🥬</button>
+      <div class="ingr-results" id="ingr-results"></div>
+    </div>
+  </div>
+
+  <!-- Variation -->
+  <div class="card card-anim-2 hidden" id="var-card">
+    <div class="sec-label">⭐ Select Variation — <span id="var-dish-name" style="color:var(--amber)"></span></div>
+    <div class="vsel-wrap">
+      <span class="vico">🥘</span>
+      <select id="var-sel" onchange="loadRecipe()">
+        <option value="">-- Choose a cooking style --</option>
+      </select>
+      <span class="varrow">▼</span>
+    </div>
+  </div>
+
+  <!-- Recipe -->
+  <div class="card card-anim-3 hidden" id="recipe-card">
+    <div class="recipe-title-row">
+      <div>
+        <h2 id="r-title"></h2>
+        <div class="tags" id="r-tags"></div>
+      </div>
+    </div>
+    <div class="meta-row" id="r-meta"></div>
+    <div class="sec-label">🧂 Ingredients</div>
+    <div class="ingr-grid" id="r-ingr"></div>
+    <div class="sec-label">📋 Steps</div>
+    <div class="steps-list" id="r-steps"></div>
+    <div class="divider"></div>
+    <div class="sec-label">🎧 Audio Guide</div>
+    <div class="audio-controls">
+      <button class="btn-play-main" id="btn-play" onclick="toggleAudio()">🔊 Play Audio</button>
+      <button class="btn-sec" id="btn-pause" onclick="pauseAudio()" disabled>⏸ Pause</button>
+      <button class="btn-sec" onclick="restartAudio()">🔁 Restart</button>
+    </div>
+    <div class="progress-wrap" id="prog-wrap">
+      <div class="progress-info">
+        <span id="prog-label">Step 1</span>
+        <span id="prog-count">1 / 5</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="prog-fill"></div></div>
+    </div>
+  </div>
+
+</main>
+
+<!-- CONTACT SECTION -->
+<section class="contact-section" id="contact-section">
+  <div class="contact-inner">
+    <div class="contact-card">
+      <h3 class="contact-heading">Send Us a Message</h3>
+      <div class="cfield"><label>Your Name</label><input type="text" id="c-name" placeholder="Enter your name"></div>
+      <div class="cfield"><label>Email Address</label><input type="email" id="c-email" placeholder="Enter your email address"></div>
+      <div class="cfield">
+        <label>Subject</label>
+        <div class="csel-wrap">
+          <select id="c-subject">
+            <option value="">Please select</option>
+            <option>Recipe Suggestion</option>
+            <option>Bug Report</option>
+            <option>Feature Request</option>
+            <option>General Query</option>
+          </select>
+          <span class="csel-arrow">&#9660;</span>
+        </div>
+      </div>
+      <div class="cfield"><label>Your Message</label><textarea id="c-msg" rows="5" placeholder="Write your message here..."></textarea></div>
+      <button class="btn-send" onclick="sendMessage()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        Send Message
+      </button>
+    </div>
+    <div class="contact-right">
+      <div class="contact-card">
+        <h3 class="contact-heading">Our Information</h3>
+        <div class="info-list">
+          <div class="info-item">
+            <div class="info-icon" style="background:#1877F2">&#128205;</div>
+            <div><div class="info-label">Our Location</div><div class="info-val">Your Location Here</div></div>
+          </div>
+          <div class="info-item">
+            <div class="info-icon" style="background:#25D366">&#128222;</div>
+            <div><div class="info-label">Call Us</div><div class="info-val">Your Phone Number</div><div class="info-val"></div></div>
+          </div>
+          <div class="info-item">
+  <div class="info-icon" style="background:#C47F00">&#9993;</div>
+  <div>
+    <div class="info-label">Email Us</div>
+    <div class="info-val"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="b2d1ddddd9d3dbddd4d4dbd1dbd3de83f2d5dfd3dbde9cd1dddf">[email&#160;protected]</a></div>
+  </div>
+</div>
+          <div class="info-item">
+            <div class="info-icon" style="background:#6B4C2A">&#128336;</div>
+            <div><div class="info-label">Working Hours</div><div class="info-val">Monday - Friday: 9:00 AM - 6:00 PM</div><div class="info-val">Saturday: 10:00 AM - 4:00 PM</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="contact-card">
+        <h3 class="contact-heading">Connect With Us</h3>
+        <div class="social-icons">
+          <a href="https://facebook.com/your-page" target="_blank" class="sicon-btn" style="background:#1877F2">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg>
+          </a>
+          <a href="https://instagram.com/your-username" target="_blank" class="sicon-btn" style="background:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888)">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="white" stroke="none"/></svg>
+          </a>
+          <a href="https://youtube.com/@your-channel" target="_blank" class="sicon-btn" style="background:#FF0000">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M22.54 6.42a2.78 2.78 0 00-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46A2.78 2.78 0 001.46 6.42 29 29 0 001 12a29 29 0 00.46 5.58 2.78 2.78 0 001.95 1.95C5.12 20 12 20 12 20s6.88 0 8.59-.47a2.78 2.78 0 001.95-1.95A29 29 0 0023 12a29 29 0 00-.46-5.58z"/><polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02" fill="#FF0000"/></svg>
+          </a>
+          <a href="https://linkedin.com/in/your-profile" target="_blank" class="sicon-btn" style="background:#0A66C2">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2z"/><circle cx="4" cy="4" r="2"/></svg>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="contact-copy">© 2026 CookAI. Made with ❤️ for smart cooking.</div>
+</section>
+
+<div class="toast" id="toast"><span id="t-ico">&#9989;</span><span id="t-msg">Done!</span></div>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script src="Dashboard.js"></script>
+</body>
+</html>
